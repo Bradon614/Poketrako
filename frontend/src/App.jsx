@@ -4,7 +4,6 @@ import Signup from './pages/signup';
 
 
 function App() {
-  
 
   return (
     <Router>
@@ -14,8 +13,9 @@ function App() {
       </Routes>
     </Router>
   )
-   
-  
+
+
+
 }
 
 export default App
