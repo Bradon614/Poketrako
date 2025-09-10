@@ -2,22 +2,31 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/intro.css';
 import { CiMail } from "react-icons/ci";
-import { login, getProfile } from '../api';
+import { login, getProfile, signup } from '../api'; // assure-toi que signup est importé
 
 export default function Intro() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // reset error
+
     try {
-      await login(email, password); // 🔐 envoie les identifiants
-      const user = await getProfile(); // 📥 récupère les infos utilisateur
-      console.log("Connecté en tant que :", user); // 🧠 debug ou affichage
+      // 🔐 tu peux créer l'utilisateur avant de tenter le login
+      await signup(email, password); 
+      console.log("Utilisateur créé !");
+
+      // ensuite login
+      await login(email, password);
+      const user = await getProfile();
+      console.log("Connecté en tant que :", user);
       navigate("/dashboard"); // 🚀 redirection
     } catch (err) {
-      alert("Identifiants incorrects ❌");
+      console.error(err);
+      setError(err.message || "Erreur inconnue");
     }
   };
 
@@ -39,8 +48,21 @@ export default function Intro() {
         <h1 className='login'>Login</h1>
         <form onSubmit={handleSubmit}>
           <CiMail />
-          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            required 
+          />
+          {error && <p className="error">{error}</p>}
           <a href="#" className='forgot-password'>Forgot Password?</a>
           <button type="submit">LOGIN</button>
           <p>

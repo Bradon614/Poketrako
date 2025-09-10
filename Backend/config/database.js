@@ -1,9 +1,15 @@
-// config/database.js
-const { Sequelize } = require('sequelize');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-  host: process.env.DB_HOST,
-  dialect: 'postgres',
-});
+async function startServer() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Connexion Prisma OK !");
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`🚀 Serveur lancé sur le port ${PORT}`));
+  } catch (err) {
+    console.error("❌ Erreur Prisma :", err);
+  }
+}
 
-module.exports = sequelize;
+startServer();
