@@ -1,4 +1,5 @@
-body{
+/* Styles de base pour tous les écrans */
+body {
   padding: 0;
   margin: 0;
   min-height: 100vh;
@@ -8,48 +9,48 @@ body{
   background-repeat: no-repeat;
   color: antiquewhite;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Segoe UI', sans-serif;
-
 }
 
-.nav{
-    width: 100%;
-    height: 8vh;
-    padding-top: 2rem;
-    padding-left: 4rem;
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    font-size: 20px;
-    background-color: transparent;
-    backdrop-filter: blur(5px);
-
+.nav {
+  width: 100%;
+  height: 8vh; /* Hauteur relative à la viewport */
+  padding: 1rem 2rem; /* Padding ajusté pour mobile */
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  font-size: 1.25rem; /* 20px en rem pour scalabilité */
+  background-color: transparent;
+  backdrop-filter: blur(5px);
 }
 
-.bigbody{
-    display: flex;
-    flex-direction: row;
+.bigbody {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap; /* Permet de passer à la ligne sur petits écrans */
 }
-.Logincontainer{
-    margin-top: 8rem;
-    margin-left: 4rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    width: 100%;
-    max-width: 300px;
+
+.Logincontainer {
+  margin-top: 5rem; /* Réduit pour mobile */
+  margin-left: 2rem; /* Réduit pour mobile */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem; /* Réduit pour mobile */
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0 0, 0.2);
+  text-align: center;
+  width: 90%; /* Largeur relative */
+  max-width: 300px;
 }
-input{
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 25px;
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    outline: none
+
+input {
+  width: 100%;
+  padding: 0.75rem; /* Réduit pour mobile */
+  margin: 0.5rem 0;
+  border: none;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  outline: none;
 }
 
 input::placeholder {
@@ -59,20 +60,20 @@ input::placeholder {
 .forgot-password {
   color: #bbb;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px en rem */
   display: block;
-  margin: 10px 0;
+  margin: 0.5rem 0;
 }
 
 button {
   width: 100%;
-  padding: 12px;
-  margin-top: 20px;
+  padding: 0.75rem; /* Réduit pour mobile */
+  margin-top: 1rem;
   border: none;
   border-radius: 25px;
   background: linear-gradient(90deg, #4facfe, #9b59b6);
   color: #fff;
-  font-size: 16px;
+  font-size: 1rem; /* 16px en rem */
   cursor: pointer;
 }
 
@@ -82,8 +83,8 @@ button:hover {
 
 p {
   color: #bbb;
-  margin-top: 15px;
-  font-size: 14px;
+  margin-top: 1rem;
+  font-size: 1.25rem; /* 20px en rem */
 }
 
 p a {
@@ -91,28 +92,127 @@ p a {
   text-decoration: none;
 }
 
-form{
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    margin: 2rem;
-}
-.logo{
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-
+form {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Réduit pour mobile */
+  margin: 1rem;
 }
 
-.text{
+.logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+}
+
+.text {
+  padding: 4rem; /* Réduit pour mobile */
+  padding-left: 2rem;
+}
+
+/* Media Queries pour responsive design */
+
+/* Tablettes (de 600px à 1024px) */
+@media screen and (min-width: 600px) and (max-width: 1024px) {
+  .nav {
+    padding: 1.5rem 3rem;
+    font-size: 1.5rem;
+  }
+
+  .Logincontainer {
+    margin-top: 6rem;
+    margin-left: 3rem;
+    padding: 2.5rem;
+    max-width: 400px;
+  }
+
+  input {
+    padding: 1rem;
+  }
+
+  button {
+    padding: 1rem;
+    font-size: 1.125rem;
+  }
+
+  .text {
+    padding: 6rem;
+    padding-left: 3rem;
+  }
+}
+
+/* Desktop (1024px et plus) */
+@media screen and (min-width: 1024px) {
+  .nav {
+    padding: 2rem 4rem;
+    font-size: 1.75rem;
+  }
+
+  .bigbody {
+    flex-wrap: nowrap; /* Retourne à une seule ligne */
+  }
+
+  .Logincontainer {
+    margin-top: 8rem;
+    margin-left: 4rem;
+    padding: 3rem;
+    max-width: 500px;
+  }
+
+  input {
+    padding: 1.25rem;
+  }
+
+  button {
+    padding: 1.25rem;
+    font-size: 1.25rem;
+  }
+
+  .text {
     padding: 8rem;
     padding-left: 4rem;
+  }
 }
 
-p{
-    font-size: 20px;
+/* Mobile (jusqu'à 600px) */
+@media screen and (max-width: 600px) {
+  .nav {
+    padding: 1rem;
+    font-size: 1rem;
+    height: 6vh;
+  }
+
+  .Logincontainer {
+    margin: 2rem auto; /* Centré avec marge */
+    width: 85%;
+    padding: 1.5rem;
+  }
+
+  input {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  button {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .text {
+    padding: 2rem;
+    padding-left: 1rem;
+  }
+
+  .logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  p {
+    font-size: 1rem;
+  }
 }
 
 /* button{

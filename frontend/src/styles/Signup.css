@@ -1,3 +1,4 @@
+/* Styles de base pour tous les écrans */
 body {
   margin: 0;
   padding: 0;
@@ -7,56 +8,58 @@ body {
   min-height: 100vh;
   color: antiquewhite;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Segoe UI', sans-serif;
+  background-image: url('/fond.jpg'); /* Ajouté pour cohérence avec le design précédent */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.signup-container {     
-
+.signup-container {
   align-items: center;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  padding: 40px;
+  padding: 2rem; /* Réduit pour mobile */
   border-radius: 15px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   text-align: center;
-  width: 100%;
+  width: 90%; /* Largeur relative */
   max-width: 300px;
 }
 
-span{
-    display: flex;
-    /* justify-content: center; */
-    align-items: center;
+span {
+  display: flex;
+  align-items: center;
 }
 
 .logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem; /* 20px en rem */
 }
 
 .logo-circle {
-  width: 40px;
-  height: 40px;
+  width: 2.5rem; /* 40px en rem */
+  height: 2.5rem; /* 40px en rem */
   background: linear-gradient(135deg, #4facfe, #9b59b6);
   border-radius: 50%;
 }
 
 .logo span {
   color: #fff;
-  font-size: 32px;
-  margin-left: 10px;
+  font-size: 2rem; /* 32px en rem */
+  margin-left: 0.625rem; /* 10px en rem */
 }
 
 h2 {
   color: #fff;
-  margin-bottom: 30px;
+  margin-bottom: 1.875rem; /* 30px en rem */
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  margin: 10px 0;
+  padding: 0.75rem; /* 10px en rem, réduit pour mobile */
+  margin: 0.625rem 0; /* 10px en rem */
   border: none;
   border-radius: 25px;
   background: rgba(255, 255, 255, 0.2);
@@ -64,33 +67,3 @@ input {
   outline: none;
 }
 
-input::placeholder {
-  color: #ccc;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 20px;
-  border: none;
-  border-radius: 25px;
-  background: linear-gradient(90deg, #4facfe, #9b59b6);
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-p {
-  color: #bbb;
-  margin-top: 15px;
-  font-size: 14px;
-}
-
-p a {
-  color: #4facfe;
-  text-decoration: none;
-}
