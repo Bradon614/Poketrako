@@ -9,6 +9,11 @@ const Dashboard = () => {
        <Sidebar />
         <div className="dashboard-container">
         <Navbar  />
+         <div style={{ marginTop: '80px' }}>
+        <BudgetAlert token={token} />
+        <h2>Mon tableau de bord</h2>
+        <SummaryCards />
+        </div>
         </div>
     </div>
   )
