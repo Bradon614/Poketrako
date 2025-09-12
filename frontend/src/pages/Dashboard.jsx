@@ -1,6 +1,7 @@
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import '../styles/Dashboard.css';
+import SummaryCards from '../components/SummaryCards';
 
 const Dashboard = () => {
      const token = localStorage.getItem('token');
