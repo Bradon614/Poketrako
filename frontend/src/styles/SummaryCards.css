@@ -1,0 +1,40 @@
+.summary-cards {
+  display: flex;
+  /* flex-wrap: wrap; */
+  justify-content: space-between;
+  gap: 20px;
+  margin: 20px auto;
+  width: 90%;
+}
+
+.card {
+  flex: 1 1 30%;
+  /* background-color: #ffffff; */
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card-title {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #222;
+}
+
+.card-icon {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #007bff;
+}
