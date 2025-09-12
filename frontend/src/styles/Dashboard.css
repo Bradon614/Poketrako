@@ -1,0 +1,49 @@
+/* Layout principal */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  /* background-color: #f5f6fa; */
+}
+
+/* Contenu à droite du sidebar */
+.dashboard-content {
+  flex: 1;
+  padding: 30px;
+  margin-left: 220px; /* largeur du sidebar */
+  transition: margin-left 0.3s ease;
+}
+
+/* Si le sidebar est replié */
+.sidebar.collapsed + .dashboard-content {
+  margin-left: 60px;
+}
+
+/* Responsive pour petits écrans */
+@media screen and (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .dashboard-content {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  .sidebar a,
+  .sidebar .logout-btn {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+}
