@@ -6,19 +6,20 @@ const prisma = new PrismaClient();
 
 async function signup(req, res) {
   try {
-    const { email, password } = req.body;
-    console.log("Signup attempt:", { email, password });
+    const { email, password, fullName } = req.body;
+    console.log("Signup attempt:", req.body);
 
-    if (!email || !password) return res.status(400).json({ message: "Email et mot de passe requis" });
+    if (!email || !password)
+      return res.status(400).json({ message: "Email et mot de passe requis" });
 
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) return res.status(400).json({ message: "Utilisateur déjà existant" });
+    if (existingUser)
+      return res.status(400).json({ message: "Utilisateur déjà existant" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword },
+      data: { email, password: hashedPassword, fullName },
     });
 
     console.log("User created:", user);
@@ -28,6 +29,7 @@ async function signup(req, res) {
     res.status(500).json({ message: "Erreur serveur lors de la création" });
   }
 }
+
 
 async function login(req, res) {
   try {

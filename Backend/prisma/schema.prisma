@@ -28,6 +28,11 @@ model Category {
   updatedAt DateTime  @updatedAt
 }
 
+enum ExpenseType {
+  ONE_TIME
+  RECURRING
+}
+
 model Expense {
   id              Int            @id @default(autoincrement())
   amount          Decimal
@@ -48,6 +53,7 @@ model Expense {
   @@index([categoryId])
   @@index([type])
 }
+
 
 model Income {
   id           Int      @id @default(autoincrement())
