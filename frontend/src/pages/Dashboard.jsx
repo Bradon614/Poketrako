@@ -5,7 +5,7 @@ import SummaryCards from '../components/SummaryCards';
 import CashFlowChart from '../components/CashFlowChart';
 import ExpenseTable from '../components/ExpenseTable';
 import IncomeTable from '../components/IncomeTable';
-import BudgetAlert from '../components/BudgetAlert';
+// import BudgetAlert from '../components/BudgetAlert';
 
 const Dashboard = () => {
      const token = localStorage.getItem('token');
@@ -15,7 +15,7 @@ const Dashboard = () => {
         <div className="dashboard-container">
         <Navbar  />
          <div style={{ marginTop: '80px' }}>
-        <BudgetAlert token={token} />
+        {/* <BudgetAlert token={token} /> */}
         <h2>Mon tableau de bord</h2>
         <SummaryCards />
         <CashFlowChart />

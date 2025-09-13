@@ -1,16 +1,27 @@
-import '../styles/SummaryCards.css'
+import { useState, useEffect } from 'react';
+import { getMonthlySummary } from '../api';
+import '../styles/SummaryCards.css';
 
 const SummaryCards = () => {
-  // Tu peux remplacer ces valeurs par des appels API plus tard
-  const income = 6872.20;
-  const expenses = 2378.20;
-  const balance = income - expenses;
+  const [summary, setSummary] = useState({ income: 0, expenses: 0, balance: 0 });
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const data = await getMonthlySummary();
+        setSummary(data);
+      } catch (error) {
+        console.error("Erreur de récupération du résumé mensuel :", error);
+      }
+    };
+    fetchSummary();
+  }, []);
 
   return (
     <div className="summary-cards">
-      <div className="card">💰 Revenus: €{income.toFixed(2)}</div>
-      <div className="card">💸 Dépenses: €{expenses.toFixed(2)}</div>
-      <div className="card">📊 Solde: €{balance.toFixed(2)}</div>
+      <div className="card">💰 Revenus: €{summary.income.toFixed(2)}</div>
+      <div className="card">💸 Dépenses: €{summary.expenses.toFixed(2)}</div>
+      <div className="card">📊 Solde: €{summary.balance.toFixed(2)}</div>
     </div>
   );
 };

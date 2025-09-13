@@ -1,13 +1,21 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { getIncomes } from '../api';
 import '../styles/IncomeTable.css';
 
 const IncomeTable = () => {
-  // Données mock pour l'instant
-  const incomes = [
-    { id: 1, date: '2025-09-01', source: 'Salaire', amount: 2500.00, description: 'Mensuel' },
-    { id: 2, date: '2025-09-05', source: 'Freelance', amount: 800.00, description: 'Projet React' },
-    { id: 3, date: '2025-09-10', source: 'Remboursement', amount: 150.00, description: 'Achat partagé' },
-  ];
+  const [incomes, setIncomes] = useState([]);
+
+  useEffect(() => {
+    const fetchIncomes = async () => {
+      try {
+        const data = await getIncomes({ _sort: 'date:DESC', _limit: 5 });
+        setIncomes(data);
+      } catch (error) {
+        console.error("Erreur de récupération des revenus :", error);
+      }
+    };
+    fetchIncomes();
+  }, []);
 
   return (
     <div className="income-table-container">
@@ -24,7 +32,7 @@ const IncomeTable = () => {
         <tbody>
           {incomes.map(income => (
             <tr key={income.id}>
-              <td>{income.date}</td>
+              <td>{new Date(income.date).toLocaleDateString()}</td>
               <td>{income.source}</td>
               <td>{income.amount.toFixed(2)}</td>
               <td>{income.description || '—'}</td>

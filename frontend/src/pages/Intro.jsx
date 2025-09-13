@@ -66,7 +66,7 @@ export default function Intro() {
           <a href="#" className='forgot-password'>Forgot Password?</a>
           <button type="submit">LOGIN</button>
           <p>
-            Don't have an account? <a href="/signup">Sign up</a>
+            Don't have an account? <a href="/dashboard">Sign up</a>
           </p>
         </form>
       </div>
