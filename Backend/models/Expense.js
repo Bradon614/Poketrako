@@ -1,9 +1,9 @@
 // models/Expense.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require('prisma');
+const prisma = require('../config/database');
 const User = require('./User');
 
-const Expense = sequelize.define('Expense', {
+const Expense = prisma.define('Expense', {
   title:      { type: DataTypes.STRING, allowNull: false },
   amount:     { type: DataTypes.FLOAT, allowNull: false },
   category:   { type: DataTypes.STRING },
