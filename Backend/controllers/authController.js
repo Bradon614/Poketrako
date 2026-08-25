@@ -7,7 +7,6 @@ const prisma = new PrismaClient();
 async function signup(req, res) {
   try {
     const { email, password, fullName } = req.body;
-    console.log("Signup attempt:", req.body);
 
     if (!email || !password)
       return res.status(400).json({ message: "Email et mot de passe requis" });
@@ -22,7 +21,6 @@ async function signup(req, res) {
       data: { email, password: hashedPassword, fullName },
     });
 
-    console.log("User created:", user);
     res.status(201).json({ message: "Utilisateur créé", userId: user.id });
   } catch (err) {
     console.error("Signup error:", err);
@@ -34,10 +32,8 @@ async function signup(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
-    console.log("Login attempt:", { email, password });
 
     const user = await prisma.user.findUnique({ where: { email } });
-    console.log("User found:", user);
 
     if (!user) return res.status(401).json({ message: "Utilisateur introuvable" });
 

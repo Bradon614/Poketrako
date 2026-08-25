@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { getBudgetAlert } from '../api/index.js';
+import { getBudgetAlert } from '../api';
 
 
-const BudgetAlert = ({ token }) => {
+const BudgetAlert = () => {
   const [alert, setAlert] = useState(null);
 
   useEffect(() => {
     const fetchAlert = async () => {
       try {
-        const data = await getBudgetAlert(token);
+        const data = await getBudgetAlert();
         if (data.alert) setAlert(data.message);
       } catch (err) {
         console.error("Erreur alerte budget :", err);
       }
     };
     fetchAlert();
-  }, [token]);
+  }, []);
 
   if (!alert) return null;
 

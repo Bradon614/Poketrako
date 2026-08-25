@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { API_URL, authHeaders } from '../api';
 
-const AddExpense = ({ token }) => {
+const AddExpense = () => {
   const [form, setForm] = useState({
     title: '',
     amount: '',
@@ -29,16 +29,17 @@ const AddExpense = ({ token }) => {
     });
 
     try {
-      await axios.post('/api/expenses', data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+      // Content-Type is set automatically by the browser for FormData.
+      const res = await fetch(`${API_URL}/expenses`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: data
       });
-      alert(' Dépense enregistrée avec justificatif');
+      if (!res.ok) throw new Error(`Requête échouée (${res.status})`);
+      alert('Dépense enregistrée avec justificatif');
     } catch (err) {
       console.error('Erreur:', err);
-      alert(' Échec de l’enregistrement');
+      alert(`Échec de l'enregistrement : ${err.message}`);
     }
   };
 

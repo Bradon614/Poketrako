@@ -1,5 +1,15 @@
-node_modules
-# Keep environment variables out of version control
-.env
+node_modules/
 
-/generated/prisma
+# Environment variables — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# Locally uploaded receipt files
+uploads/
+
+# Prisma generated client
+generated/
+prisma/generated/
+
+.DS_Store

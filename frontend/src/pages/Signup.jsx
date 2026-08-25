@@ -1,7 +1,6 @@
 import React from 'react';
 import '../styles/Signup.css';
 import { Link } from 'react-router-dom';
-import { signup } from '../api';
 
 
 const Signup = () => {

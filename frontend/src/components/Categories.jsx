@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { API_URL, authHeaders } from '../api';
 
-const Categories = ({ token }) => {
+const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -11,20 +12,17 @@ const Categories = ({ token }) => {
   }, []);
 
   const fetchCategories = async () => {
-    const res = await fetch('http://localhost:5000/api/categories', {
-      headers: { Authorization: `Bearer ${token}` }
+    const res = await fetch(`${API_URL}/categories`, {
+      headers: authHeaders()
     });
     const data = await res.json();
     setCategories(data);
   };
 
   const createCategory = async () => {
-    const res = await fetch('http://localhost:5000/api/categories', {
+    const res = await fetch(`${API_URL}/categories`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ name: newName })
     });
     if (res.ok) {
@@ -34,12 +32,9 @@ const Categories = ({ token }) => {
   };
 
   const updateCategory = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/categories/${id}`, {
+    const res = await fetch(`${API_URL}/categories/${id}`, {
       method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ name: editName })
     });
     if (res.ok) {
@@ -50,9 +45,9 @@ const Categories = ({ token }) => {
   };
 
   const deleteCategory = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/categories/${id}`, {
+    const res = await fetch(`${API_URL}/categories/${id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: authHeaders()
     });
     if (res.ok) fetchCategories();
   };

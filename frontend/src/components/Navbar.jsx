@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/Navbar.css';
 
-const Navbar = ({ onLogout }) => {
+const Navbar = () => {
   const today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',

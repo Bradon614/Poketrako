@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { API_URL, authHeaders } from '../api';
 import '../styles/NewExpense.css';
 
-const NewExpense = ({ token }) => {
+const NewExpense = () => {
   const [form, setForm] = useState({
     amount: '',
     date: '',
@@ -29,9 +30,9 @@ const NewExpense = ({ token }) => {
     });
 
     try {
-      const res = await fetch('http://localhost:5000/api/expenses', {
+      const res = await fetch(`${API_URL}/expenses`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(),
         body: data
       });
       if (!res.ok) throw new Error('Erreur lors de la création');

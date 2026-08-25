@@ -8,7 +8,7 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/');
   };
 
   return (
@@ -22,7 +22,6 @@ const Sidebar = () => {
         <NavLink to="/expenses" activeclassname="active">💸 Dépenses</NavLink>
         <NavLink to="/incomes" activeclassname="active">💰 Revenus</NavLink>
         <NavLink to="/categories" activeclassname="active">📂 Catégories</NavLink>
-        <NavLink to="/profile" activeclassname="active">👤 Profil</NavLink>
         <button className="logout-btn" onClick={handleLogout}>🚪 Déconnexion</button>
       </nav>
     </div>
