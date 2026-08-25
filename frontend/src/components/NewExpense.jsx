@@ -1,74 +1,113 @@
-import React, { useState } from 'react';
-import { API_URL, authHeaders } from '../api';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createExpense, getCategories } from '../api';
 import '../styles/NewExpense.css';
 
+const EXPENSE_TYPES = [
+  { value: 'ONE_TIME', label: 'Ponctuelle' },
+  { value: 'RECURRING', label: 'Récurrente' }
+];
+
 const NewExpense = () => {
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     amount: '',
     date: '',
     categoryId: '',
     description: '',
-    type: 'one-time',
+    type: 'ONE_TIME',
     startDate: '',
-    endDate: '',
-    receipt: null,
+    endDate: ''
   });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    getCategories()
+      .then(setCategories)
+      .catch((err) => console.error('Erreur de récupération des catégories :', err));
+  }, []);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: files ? files[0] : value
-    }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      if (value) data.append(key, value);
-    });
+    setError('');
+    setSubmitting(true);
 
     try {
-      const res = await fetch(`${API_URL}/expenses`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: data
+      await createExpense({
+        amount: form.amount,
+        date: form.date || undefined,
+        categoryId: form.categoryId || undefined,
+        description: form.description || undefined,
+        type: form.type,
+        startDate: form.type === 'RECURRING' ? form.startDate || undefined : undefined,
+        endDate: form.type === 'RECURRING' ? form.endDate || undefined : undefined
       });
-      if (!res.ok) throw new Error('Erreur lors de la création');
-      alert('Dépense enregistrée ');
+      navigate('/expenses');
     } catch (err) {
-      console.error(err);
-      alert('Erreur : ' + err.message);
+      setError(err.message || 'Erreur lors de la création de la dépense');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <form className="expense-form" onSubmit={handleSubmit}>
       <h3>Nouvelle dépense</h3>
-      <input type="number" name="amount" placeholder="Montant (€)" onChange={handleChange} required />
-      <input type="date" name="date" onChange={handleChange} required />
-      <input type="text" name="categoryId" placeholder="ID catégorie" onChange={handleChange} required />
-      <input type="text" name="description" placeholder="Description (optionnel)" onChange={handleChange} />
-      
-      <select name="type" onChange={handleChange}>
-        <option value="one-time">Ponctuelle</option>
-        <option value="recurring">Récurrente</option>
+
+      {error && <p className="error">{error}</p>}
+
+      <input
+        type="number"
+        step="0.01"
+        min="0.01"
+        name="amount"
+        placeholder="Montant (€)"
+        value={form.amount}
+        onChange={handleChange}
+        required
+      />
+      <input type="date" name="date" value={form.date} onChange={handleChange} />
+
+      <select name="categoryId" value={form.categoryId} onChange={handleChange}>
+        <option value="">Sans catégorie</option>
+        {categories.map((cat) => (
+          <option key={cat.id} value={cat.id}>{cat.name}</option>
+        ))}
       </select>
 
-      {form.type === 'recurring' && (
+      <input
+        type="text"
+        name="description"
+        placeholder="Description (optionnel)"
+        value={form.description}
+        onChange={handleChange}
+      />
+
+      <select name="type" value={form.type} onChange={handleChange}>
+        {EXPENSE_TYPES.map((t) => (
+          <option key={t.value} value={t.value}>{t.label}</option>
+        ))}
+      </select>
+
+      {form.type === 'RECURRING' && (
         <>
           <label>Début</label>
-          <input type="date" name="startDate" onChange={handleChange} required />
+          <input type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
           <label>Fin (optionnel)</label>
-          <input type="date" name="endDate" onChange={handleChange} />
+          <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
         </>
       )}
 
-      <label>Justificatif (PDF, JPG, PNG)</label>
-      <input type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png" onChange={handleChange} />
-
-      <button type="submit">Ajouter</button>
+      <button type="submit" disabled={submitting}>
+        {submitting ? 'Enregistrement…' : 'Ajouter'}
+      </button>
     </form>
   );
 };

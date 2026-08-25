@@ -127,6 +127,13 @@ cd frontend
 npm run dev
 ```
 
+> **macOS note:** port 5000 is often occupied by the system AirPlay Receiver
+> (`ControlCenter`), which silently answers with `403 Forbidden` instead of a
+> connection error — Express fails to bind and exits. If `Backend/npm start`
+> doesn't print "Server listening on port 5000", either disable AirPlay
+> Receiver (System Settings → General → AirDrop & Handoff) or set a different
+> `PORT` in `Backend/.env` and matching `VITE_API_URL` in `frontend/.env`.
+
 Other frontend commands:
 
 ```bash
@@ -190,20 +197,20 @@ must be at least 8 characters.
 
 **Working**
 
-- User registration, login and "current user" endpoints
+- User registration, login and "current user" endpoints, fully wired end to end
+- Full CRUD on expenses, incomes and categories, from the UI down to the database
+- Monthly summary cards, cash flow chart and budget alert on the dashboard
+- Protected routes redirect to login when there's no token
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
 
 **Not working yet**
 
-- The frontend still uses its own ad-hoc `fetch` calls per page/component
-  rather than the shared functions in `src/api.js`; several screens don't call
-  the new endpoints yet
-- The signup page form is not wired to the API
-- There is no route protection on the frontend: `/dashboard` is reachable
-  without a token (the API itself does reject unauthenticated requests)
-- Receipt upload middleware (`multer`) exists but is not connected to any route
+- Receipt upload middleware (`multer`) exists but is not connected to any
+  route — the expense form has no file field yet
+- Income and category deletion have no confirmation step
 - There are no automated tests
+- The UI is unstyled/inconsistent in places — visual design is Phase 6
 
 **Known limitations**
 
@@ -212,6 +219,9 @@ must be at least 8 characters.
   bump, not fixed blindly with `--force` since that can be a breaking change
 - No refresh tokens: sessions expire after 24h with no renewal flow
 - No account lockout beyond the IP-based rate limit (e.g. no CAPTCHA)
+- Route protection is a client-side presence check only (no token
+  validation before rendering) — this is a UX guard, not a security
+  boundary; the API is what actually enforces access control
 
 ## Roadmap
 
@@ -219,7 +229,7 @@ must be at least 8 characters.
 2. ~~Phase 2 — Backend stabilization: mount the missing routes, central error handling, per-user categories~~ (done)
 3. ~~Phase 3 — Request validation, consistent error envelope, cascading deletes~~ (done)
 4. ~~Phase 4 — Security hardening: helmet, CORS restriction, auth rate limiting~~ (done)
-5. Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms
+5. ~~Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms~~ (done)
 6. Phase 6 — UI/UX redesign
 7. Phase 7 — Remaining features (receipts, recurring transactions, budgets)
 8. Phase 8 — Testing

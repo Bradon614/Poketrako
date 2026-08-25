@@ -34,7 +34,7 @@ const IncomeTable = () => {
             <tr key={income.id}>
               <td>{new Date(income.date).toLocaleDateString()}</td>
               <td>{income.source}</td>
-              <td>{income.amount.toFixed(2)}</td>
+              <td>{Number(income.amount).toFixed(2)}</td>
               <td>{income.description || '—'}</td>
             </tr>
           ))}

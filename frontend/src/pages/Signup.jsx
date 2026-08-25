@@ -1,17 +1,61 @@
-import React from 'react';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import '../styles/Signup.css';
-import { Link } from 'react-router-dom';
-
+import { signup, login } from '../api';
 
 const Signup = () => {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+
+    try {
+      await signup(email, password, fullName || undefined);
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || "Erreur lors de l'inscription");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="signup-container">
       <h2>Signup</h2>
-      <form>
-        <input type="text" placeholder="Username" required />
-        <input type="email" placeholder="Email" required />
-        <input type="password" placeholder="Password" required />
-        <button type="submit">SIGN UP</button>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Nom complet"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password (8 caractères minimum)"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          minLength={8}
+          required
+        />
+        {error && <p className="error">{error}</p>}
+        <button type="submit" disabled={submitting}>
+          {submitting ? 'INSCRIPTION…' : 'SIGN UP'}
+        </button>
         <p>
           Already have an account? <Link to="/">Login</Link>
         </p>

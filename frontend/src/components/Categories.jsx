@@ -1,67 +1,71 @@
-import React, { useEffect, useState } from 'react';
-import { API_URL, authHeaders } from '../api';
+import { useEffect, useState } from 'react';
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../api';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const fetchCategories = async () => {
-    const res = await fetch(`${API_URL}/categories`, {
-      headers: authHeaders()
-    });
-    const data = await res.json();
-    setCategories(data);
-  };
-
-  const createCategory = async () => {
-    const res = await fetch(`${API_URL}/categories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ name: newName })
-    });
-    if (res.ok) {
-      setNewName('');
-      fetchCategories();
+    try {
+      setCategories(await getCategories());
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  const updateCategory = async (id) => {
-    const res = await fetch(`${API_URL}/categories/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ name: editName })
-    });
-    if (res.ok) {
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setError('');
+    try {
+      await createCategory(newName.trim());
+      setNewName('');
+      fetchCategories();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleUpdate = async (id) => {
+    if (!editName.trim()) return;
+    setError('');
+    try {
+      await updateCategory(id, editName.trim());
       setEditingId(null);
       setEditName('');
       fetchCategories();
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  const deleteCategory = async (id) => {
-    const res = await fetch(`${API_URL}/categories/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders()
-    });
-    if (res.ok) fetchCategories();
+  const handleDelete = async (id) => {
+    setError('');
+    try {
+      await deleteCategory(id);
+      fetchCategories();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
     <div className="category-manager">
       <h3>Catégories</h3>
+      {error && <p className="error">{error}</p>}
       <input
         type="text"
         placeholder="Nouvelle catégorie"
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
       />
-      <button onClick={createCategory}>Ajouter</button>
+      <button onClick={handleCreate}>Ajouter</button>
 
       <ul>
         {categories.map(cat => (
@@ -73,7 +77,7 @@ const Categories = () => {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                 />
-                <button onClick={() => updateCategory(cat.id)}>Valider</button>
+                <button onClick={() => handleUpdate(cat.id)}>Valider</button>
               </>
             ) : (
               <>
@@ -82,7 +86,7 @@ const Categories = () => {
                   setEditingId(cat.id);
                   setEditName(cat.name);
                 }}>✏️</button>
-                <button onClick={() => deleteCategory(cat.id)}>🗑️</button>
+                <button onClick={() => handleDelete(cat.id)}>🗑️</button>
               </>
             )}
           </li>

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getExpenses } from '../api';
 import '../styles/ExpenseTable.css';
 
@@ -19,7 +20,10 @@ const ExpenseTable = () => {
 
   return (
     <div className="expense-table-container">
-      <h3>Activité récente</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3>Activité récente</h3>
+        <Link to="/expenses/new">+ Nouvelle dépense</Link>
+      </div>
       <table className="expense-table">
         <thead>
           <tr>
@@ -31,9 +35,9 @@ const ExpenseTable = () => {
         <tbody>
           {expenses.map(exp => (
             <tr key={exp.id}>
-              <td>{new Date(exp.date).toLocaleDateString()}</td>
-              <td>{exp.description}</td>
-              <td>{exp.amount.toFixed(2)}</td>
+              <td>{exp.date ? new Date(exp.date).toLocaleDateString() : '—'}</td>
+              <td>{exp.description || '—'}</td>
+              <td>{Number(exp.amount).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>

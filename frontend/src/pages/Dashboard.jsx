@@ -5,7 +5,7 @@ import SummaryCards from '../components/SummaryCards';
 import CashFlowChart from '../components/CashFlowChart';
 import ExpenseTable from '../components/ExpenseTable';
 import IncomeTable from '../components/IncomeTable';
-// import BudgetAlert from '../components/BudgetAlert';
+import BudgetAlert from '../components/BudgetAlert';
 
 const Dashboard = () => {
   return (
@@ -14,7 +14,7 @@ const Dashboard = () => {
         <div className="dashboard-container">
         <Navbar  />
          <div style={{ marginTop: '80px' }}>
-        {/* <BudgetAlert /> — enabled once the summary API is mounted (Phase 2) */}
+        <BudgetAlert />
         <h2>Mon tableau de bord</h2>
         <SummaryCards />
         <CashFlowChart />

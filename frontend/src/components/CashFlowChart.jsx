@@ -39,13 +39,13 @@ const CashFlowChart = () => {
         incomes.forEach(item => {
             const month = new Date(item.date).toLocaleString('default', { month: 'short', year: 'numeric' });
             if (!monthlyData[month]) monthlyData[month] = { income: 0, expense: 0 };
-            monthlyData[month].income += item.amount;
+            monthlyData[month].income += Number(item.amount);
         });
 
         expenses.forEach(item => {
             const month = new Date(item.date).toLocaleString('default', { month: 'short', year: 'numeric' });
             if (!monthlyData[month]) monthlyData[month] = { income: 0, expense: 0 };
-            monthlyData[month].expense += item.amount;
+            monthlyData[month].expense += Number(item.amount);
         });
 
         const labels = Object.keys(monthlyData);

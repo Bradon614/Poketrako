@@ -6,79 +6,133 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-// Minimal shared GET helper. The full API client is rebuilt in a later phase.
-async function getJSON(path, params) {
+async function request(path, { method = "GET", body, params } = {}) {
   const query = params ? `?${new URLSearchParams(params)}` : "";
 
   const res = await fetch(`${API_URL}${path}${query}`, {
+    method,
     headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: body !== undefined ? JSON.stringify(body) : undefined
   });
 
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
   if (!res.ok) {
-    throw new Error(`Requête échouée (${res.status}) sur ${path}`);
+    throw new Error(data?.message || `Requête échouée (${res.status}) sur ${path}`);
   }
 
-  return res.json();
+  return data;
 }
 
-export async function signup(email, password) {
-  const res = await fetch(`${API_URL}/auth/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
 
-  if (!res.ok) {
-    throw new Error("Erreur d'inscription");
-  }
-
-  return true;
+export async function signup(email, password, fullName) {
+  return request("/auth/signup", { method: "POST", body: { email, password, fullName } });
 }
 
 export async function login(email, password) {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
-
-  if (!res.ok) throw new Error("Identifiants incorrects");
-
-  const data = await res.json();
+  const data = await request("/auth/login", { method: "POST", body: { email, password } });
   localStorage.setItem("token", data.token);
   return data;
 }
 
 export async function getProfile() {
-  const token = localStorage.getItem("token");
-  if (!token) throw new Error("Utilisateur non connecté");
-
-  return getJSON("/auth/me");
+  return request("/auth/me");
 }
 
 export function logout() {
   localStorage.removeItem("token");
 }
 
+export function isAuthenticated() {
+  return Boolean(localStorage.getItem("token"));
+}
+
 // ---------------------------------------------------------------------------
-// The endpoints below are not mounted on the backend yet (see Phase 2).
-// They exist so the components that already import them can compile.
+// Expenses
 // ---------------------------------------------------------------------------
 
 export function getExpenses(params) {
-  return getJSON("/expenses", params);
+  return request("/expenses", { params });
 }
+
+export function getExpense(id) {
+  return request(`/expenses/${id}`);
+}
+
+export function createExpense(expense) {
+  return request("/expenses", { method: "POST", body: expense });
+}
+
+export function updateExpense(id, expense) {
+  return request(`/expenses/${id}`, { method: "PUT", body: expense });
+}
+
+export function deleteExpense(id) {
+  return request(`/expenses/${id}`, { method: "DELETE" });
+}
+
+// ---------------------------------------------------------------------------
+// Incomes
+// ---------------------------------------------------------------------------
 
 export function getIncomes(params) {
-  return getJSON("/incomes", params);
+  return request("/incomes", { params });
 }
 
+export function getIncome(id) {
+  return request(`/incomes/${id}`);
+}
+
+export function createIncome(income) {
+  return request("/incomes", { method: "POST", body: income });
+}
+
+export function updateIncome(id, income) {
+  return request(`/incomes/${id}`, { method: "PUT", body: income });
+}
+
+export function deleteIncome(id) {
+  return request(`/incomes/${id}`, { method: "DELETE" });
+}
+
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
+export function getCategories() {
+  return request("/categories");
+}
+
+export function createCategory(name) {
+  return request("/categories", { method: "POST", body: { name } });
+}
+
+export function updateCategory(id, name) {
+  return request(`/categories/${id}`, { method: "PUT", body: { name } });
+}
+
+export function deleteCategory(id) {
+  return request(`/categories/${id}`, { method: "DELETE" });
+}
+
+// ---------------------------------------------------------------------------
+// Summary
+// ---------------------------------------------------------------------------
+
 export function getMonthlySummary(params) {
-  return getJSON("/summary/monthly", params);
+  return request("/summary/monthly", { params });
+}
+
+export function getSummary(params) {
+  return request("/summary", { params });
 }
 
 export function getBudgetAlert() {
-  return getJSON("/summary/alerts");
+  return request("/summary/alerts");
 }
 
 export { API_URL, authHeaders };

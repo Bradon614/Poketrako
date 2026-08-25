@@ -2,31 +2,27 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/intro.css';
 import { CiMail } from "react-icons/ci";
-import { login, getProfile, signup } from '../api'; // assure-toi que signup est importé
+import { login } from '../api';
 
 export default function Intro() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // reset error
+    setError("");
+    setSubmitting(true);
 
     try {
-      // 🔐 tu peux créer l'utilisateur avant de tenter le login
-      await signup(email, password); 
-      console.log("Utilisateur créé !");
-
-      // ensuite login
       await login(email, password);
-      const user = await getProfile();
-      console.log("Connecté en tant que :", user);
-      navigate("/dashboard"); // 🚀 redirection
+      navigate("/dashboard");
     } catch (err) {
-      console.error(err);
       setError(err.message || "Erreur inconnue");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -64,9 +60,11 @@ export default function Intro() {
           />
           {error && <p className="error">{error}</p>}
           <a href="#" className='forgot-password'>Forgot Password?</a>
-          <button type="submit">LOGIN</button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "CONNEXION…" : "LOGIN"}
+          </button>
           <p>
-            Don't have an account? <a href="/dashboard">Sign up</a>
+            Don't have an account? <a href="/signup">Sign up</a>
           </p>
         </form>
       </div>
