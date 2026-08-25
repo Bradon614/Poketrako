@@ -25,7 +25,7 @@ model Category {
   id        Int       @id @default(autoincrement())
   name      String
   userId    Int
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expenses  Expense[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -51,7 +51,7 @@ model Expense {
   startDate       DateTime?
   endDate         DateTime?
   userId          Int
-  user            User           @relation(fields: [userId], references: [id])
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   receiptUploadId Int?
   receiptUpload   ReceiptUpload? @relation(fields: [receiptUploadId], references: [id])
 
@@ -69,7 +69,7 @@ model Income {
   description  String?
   creationDate DateTime @default(now())
   userId       Int
-  user         User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([date])
@@ -83,6 +83,6 @@ model ReceiptUpload {
   size        Int
   uploadedAt  DateTime  @default(now())
   userId      Int
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expense     Expense[]
 }

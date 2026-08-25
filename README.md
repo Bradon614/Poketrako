@@ -106,8 +106,8 @@ and `Expense.categoryId` is optional so an expense can exist before it is
 categorized.
 
 > **Note:** there is no seed data yet — a new user starts with zero categories.
-> There is also no cascading delete: removing a user does not remove their
-> expenses/incomes/categories at the database level.
+> Deleting a `User` now cascades at the database level to their categories,
+> expenses, incomes and receipt uploads.
 
 ## Running the project
 
@@ -165,9 +165,17 @@ All endpoints are prefixed with `/api`. Authenticated requests use
 Every resource is scoped to the authenticated user — a JWT can only read or
 modify its own data.
 
-Unmatched routes return `404 { "message": "Route non trouvée" }`, and unhandled
-server errors return `500 { "message": "Erreur serveur interne" }` via a
-centralized error handler in `server.js`.
+All error responses use the same envelope: `{ "message": "..." }` with an
+appropriate status code (`400` validation, `401` auth, `404` not found, `500`
+unexpected). Raw Prisma error details are logged server-side but never sent to
+the client. Unmatched routes return `404 { "message": "Route non trouvée" }`,
+and truly unexpected server errors return `500` via the centralized handler in
+`server.js`.
+
+Request bodies are validated by hand (see `Backend/utils/validation.js`) —
+amounts must be positive numbers, dates must parse, `Category`/`Income` names
+and sources must be non-empty, emails must look like emails, and passwords
+must be at least 8 characters.
 
 ## Current status
 
@@ -190,17 +198,14 @@ centralized error handler in `server.js`.
 
 **Known limitations**
 
-- No request body validation on the API (e.g. malformed dates/amounts surface
-  as raw Prisma errors)
 - No rate limiting or security headers
 - CORS is open to all origins
-- No cascading deletes: deleting a user does not delete their data
 
 ## Roadmap
 
 1. ~~Phase 1 — Make the project run again~~ (done)
 2. ~~Phase 2 — Backend stabilization: mount the missing routes, central error handling, per-user categories~~ (done)
-3. Phase 3 — Request validation, consistent error responses, remaining schema corrections
+3. ~~Phase 3 — Request validation, consistent error envelope, cascading deletes~~ (done)
 4. Phase 4 — Authentication and security hardening
 5. Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms
 6. Phase 6 — UI/UX redesign

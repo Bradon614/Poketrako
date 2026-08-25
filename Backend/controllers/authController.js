@@ -1,15 +1,27 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { isValidEmail, isNonEmptyString } = require("../utils/validation");
+const { sendError } = require("../utils/errors");
 
 const prisma = new PrismaClient();
+const MIN_PASSWORD_LENGTH = 8;
 
 async function signup(req, res) {
   try {
     const { email, password, fullName } = req.body;
 
-    if (!email || !password)
-      return res.status(400).json({ message: "Email et mot de passe requis" });
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: "Adresse email invalide" });
+    }
+    if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
+      return res.status(400).json({
+        message: `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères`
+      });
+    }
+    if (fullName !== undefined && fullName !== null && !isNonEmptyString(fullName)) {
+      return res.status(400).json({ message: "Nom invalide" });
+    }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser)
@@ -23,15 +35,17 @@ async function signup(req, res) {
 
     res.status(201).json({ message: "Utilisateur créé", userId: user.id });
   } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ message: "Erreur serveur lors de la création" });
+    sendError(res, err, { message: "Erreur serveur lors de la création" });
   }
 }
-
 
 async function login(req, res) {
   try {
     const { email, password } = req.body;
+
+    if (!isValidEmail(email) || typeof password !== "string" || password.length === 0) {
+      return res.status(400).json({ message: "Email et mot de passe requis" });
+    }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -43,8 +57,7 @@ async function login(req, res) {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
     res.json({ token });
   } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Erreur serveur lors de la connexion" });
+    sendError(res, err, { message: "Erreur serveur lors de la connexion" });
   }
 }
 
@@ -52,10 +65,10 @@ async function getMe(req, res) {
   try {
     const userId = req.user.id;
     const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
     res.json({ email: user.email, id: user.id });
   } catch (err) {
-    console.error("GetMe error:", err);
-    res.status(500).json({ message: "Erreur serveur" });
+    sendError(res, err);
   }
 }
 

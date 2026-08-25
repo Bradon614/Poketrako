@@ -1,9 +1,16 @@
 const { PrismaClient } = require('@prisma/client');
+const { isValidDateString } = require('../utils/validation');
+const { sendError } = require('../utils/errors');
+
 const prisma = new PrismaClient();
 
 exports.getMonthlySummary = async (req, res) => {
     try {
         const { month } = req.query;
+        if (month !== undefined && !isValidDateString(month)) {
+            return res.status(400).json({ message: "Le paramètre 'month' est invalide" });
+        }
+
         const targetDate = month ? new Date(month) : new Date();
         const year = targetDate.getFullYear();
         const monthIndex = targetDate.getMonth();
@@ -21,8 +28,8 @@ exports.getMonthlySummary = async (req, res) => {
             }),
         ]);
 
-        const income = result[0]._sum.amount || 0;
-        const expenses = result[1]._sum.amount || 0;
+        const income = Number(result[0]._sum.amount || 0);
+        const expenses = Number(result[1]._sum.amount || 0);
 
         res.json({
             month: `${year}-${String(monthIndex + 1).padStart(2, '0')}`,
@@ -31,14 +38,16 @@ exports.getMonthlySummary = async (req, res) => {
             balance: income - expenses,
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendError(res, error);
     }
 };
 
 exports.getSummary = async (req, res) => {
     try {
         const { start, end } = req.query;
-        if (!start || !end) return res.status(400).json({ error: "Les paramètres 'start' et 'end' sont requis" });
+        if (!isValidDateString(start) || !isValidDateString(end)) {
+            return res.status(400).json({ message: "Les paramètres 'start' et 'end' sont requis et doivent être des dates valides" });
+        }
 
         const startDate = new Date(start);
         const endDate = new Date(end);
@@ -54,8 +63,8 @@ exports.getSummary = async (req, res) => {
             }),
         ]);
 
-        const income = result[0]._sum.amount || 0;
-        const expenses = result[1]._sum.amount || 0;
+        const income = Number(result[0]._sum.amount || 0);
+        const expenses = Number(result[1]._sum.amount || 0);
 
         res.json({
             startDate: start,
@@ -65,7 +74,7 @@ exports.getSummary = async (req, res) => {
             balance: income - expenses,
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendError(res, error);
     }
 };
 
@@ -98,6 +107,6 @@ exports.getAlerts = async (req, res) => {
             res.json({ alert: false, message: 'Vos finances sont équilibrées ce mois-ci.' });
         }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendError(res, error);
     }
 };

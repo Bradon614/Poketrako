@@ -1,4 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
+const { isNonEmptyString } = require('../utils/validation');
+const { sendError } = require('../utils/errors');
+
 const prisma = new PrismaClient();
 
 exports.getCategories = async (req, res) => {
@@ -8,33 +11,41 @@ exports.getCategories = async (req, res) => {
         });
         res.json(categories);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendError(res, error);
     }
 };
 
 exports.createCategory = async (req, res) => {
     try {
         const { name } = req.body;
+        if (!isNonEmptyString(name, { maxLength: 100 })) {
+            return res.status(400).json({ message: 'Le nom de la catégorie est requis (100 caractères maximum)' });
+        }
+
         const category = await prisma.category.create({
             data: { name, userId: req.user.id }
         });
         res.status(201).json(category);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        sendError(res, error, { status: 400, message: 'Impossible de créer la catégorie' });
     }
 };
 
 exports.updateCategory = async (req, res) => {
     try {
         const { name } = req.body;
+        if (!isNonEmptyString(name, { maxLength: 100 })) {
+            return res.status(400).json({ message: 'Le nom de la catégorie est requis (100 caractères maximum)' });
+        }
+
         const category = await prisma.category.updateMany({
             where: { id: parseInt(req.params.id), userId: req.user.id },
             data: { name }
         });
-        if (category.count === 0) return res.status(404).json({ error: 'Catégorie non trouvée' });
+        if (category.count === 0) return res.status(404).json({ message: 'Catégorie non trouvée' });
         res.status(200).json({ message: 'Catégorie mise à jour' });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        sendError(res, error, { status: 400, message: 'Impossible de mettre à jour la catégorie' });
     }
 };
 
@@ -45,15 +56,15 @@ exports.deleteCategory = async (req, res) => {
             where: { categoryId: parseInt(req.params.id) }
         });
         if (expenseCount > 0) {
-            return res.status(400).json({ error: 'Impossible de supprimer une catégorie utilisée' });
+            return res.status(400).json({ message: 'Impossible de supprimer une catégorie utilisée' });
         }
 
         const category = await prisma.category.deleteMany({
             where: { id: parseInt(req.params.id), userId: req.user.id }
         });
-        if (category.count === 0) return res.status(404).json({ error: 'Catégorie non trouvée' });
+        if (category.count === 0) return res.status(404).json({ message: 'Catégorie non trouvée' });
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendError(res, error);
     }
 };
