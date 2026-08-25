@@ -40,6 +40,7 @@ Poketrako/
 |----------|------------|
 | Backend  | Node.js, Express 5, Prisma 6, PostgreSQL |
 | Auth     | JSON Web Tokens (`jsonwebtoken`), `bcrypt` password hashing |
+| Security | `helmet` (HTTP security headers), `express-rate-limit` (auth brute-force protection), origin-restricted CORS |
 | Frontend | React 19, Vite 7, React Router 7, Chart.js via `react-chartjs-2` |
 | Styling  | Plain CSS |
 
@@ -80,6 +81,7 @@ cp frontend/.env.example frontend/.env
 | `DATABASE_URL` | yes      | PostgreSQL connection string used by Prisma |
 | `JWT_SECRET`   | yes      | Secret used to sign JWTs. Generate with `openssl rand -base64 32` |
 | `PORT`         | no       | API port. Defaults to `5000` |
+| `FRONTEND_URL` | no       | Origin allowed by CORS. Defaults to `http://localhost:5173` |
 
 The server refuses to start if `DATABASE_URL` or `JWT_SECRET` is missing.
 
@@ -177,6 +179,13 @@ amounts must be positive numbers, dates must parse, `Category`/`Income` names
 and sources must be non-empty, emails must look like emails, and passwords
 must be at least 8 characters.
 
+### API security
+
+- `helmet` sets standard HTTP security headers (CSP, `X-Frame-Options`, etc.)
+- CORS only accepts requests from `FRONTEND_URL`
+- `/api/auth/login` is limited to 10 requests / 15 min per IP, `/api/auth/signup`
+  to 20 / 15 min — both return `429 { "message": "..." }` once exceeded
+
 ## Current status
 
 **Working**
@@ -198,15 +207,18 @@ must be at least 8 characters.
 
 **Known limitations**
 
-- No rate limiting or security headers
-- CORS is open to all origins
+- `npm audit` reports vulnerabilities in transitive dependencies of `multer`
+  and `express` (`path-to-regexp`, `qs`) — tracked for a later dependency
+  bump, not fixed blindly with `--force` since that can be a breaking change
+- No refresh tokens: sessions expire after 24h with no renewal flow
+- No account lockout beyond the IP-based rate limit (e.g. no CAPTCHA)
 
 ## Roadmap
 
 1. ~~Phase 1 — Make the project run again~~ (done)
 2. ~~Phase 2 — Backend stabilization: mount the missing routes, central error handling, per-user categories~~ (done)
 3. ~~Phase 3 — Request validation, consistent error envelope, cascading deletes~~ (done)
-4. Phase 4 — Authentication and security hardening
+4. ~~Phase 4 — Security hardening: helmet, CORS restriction, auth rate limiting~~ (done)
 5. Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms
 6. Phase 6 — UI/UX redesign
 7. Phase 7 — Remaining features (receipts, recurring transactions, budgets)

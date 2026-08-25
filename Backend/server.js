@@ -2,6 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { PrismaClient } = require('@prisma/client');
 
 // Fail fast on missing configuration rather than crashing later on the first
@@ -19,8 +20,15 @@ if (missingEnv.length > 0) {
 const prisma = new PrismaClient();
 const app = express();
 
+// The API and the frontend are served from different origins, so uploaded
+// files must stay loadable cross-origin (e.g. an <img> on the frontend
+// pointing at /uploads/...).
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({ origin: FRONTEND_URL }));
+
 app.use(express.json());
-app.use(cors());
 app.use('/uploads', express.static('uploads'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
