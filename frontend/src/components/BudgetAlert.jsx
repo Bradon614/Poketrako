@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { LuTriangleAlert } from 'react-icons/lu';
 import { getBudgetAlert } from '../api';
-
+import '../styles/BudgetAlert.css';
 
 const BudgetAlert = () => {
   const [alert, setAlert] = useState(null);
@@ -21,7 +22,7 @@ const BudgetAlert = () => {
 
   return (
     <div className="budget-alert">
-      ⚠️ {alert}
+      <LuTriangleAlert /> {alert}
     </div>
   );
 };

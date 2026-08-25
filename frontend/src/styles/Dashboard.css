@@ -1,49 +1,44 @@
-/* Layout principal */
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  /* background-color: #f5f6fa; */
 }
 
-/* Contenu à droite du sidebar */
-.dashboard-content {
+.dashboard-container {
   flex: 1;
-  padding: 30px;
-  margin-left: 220px; /* largeur du sidebar */
-  transition: margin-left 0.3s ease;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Si le sidebar est replié */
-.sidebar.collapsed + .dashboard-content {
-  margin-left: 60px;
+.dashboard-main {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
-/* Responsive pour petits écrans */
+.dashboard-main h2 {
+  margin: 0;
+}
+
+.tables-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+@media screen and (max-width: 900px) {
+  .tables-section {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media screen and (max-width: 768px) {
   .dashboard-layout {
     flex-direction: column;
   }
 
-  .dashboard-content {
-    margin-left: 0;
-    padding: 20px;
-  }
-
-  .sidebar {
-    position: relative;
-    width: 100%;
-    height: auto;
-  }
-
-  .sidebar nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-  }
-
-  .sidebar a,
-  .sidebar .logout-btn {
-    font-size: 0.9rem;
-    padding: 6px 10px;
+  .dashboard-main {
+    padding: var(--space-md);
   }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import { LuCalendar } from 'react-icons/lu';
 import '../styles/Navbar.css';
 
 const Navbar = () => {
@@ -12,12 +12,10 @@ const Navbar = () => {
   return (
     <div className="navbar">
       <div className="navbar-left">
-    
+        <h1>Poketrako</h1>
       </div>
       <div className="navbar-right">
-        
-        <span className="navbar-date">📅 {today}</span>
-        <h1>Poketrako</h1>
+        <span className="navbar-date"><LuCalendar /> {today}</span>
       </div>
     </div>
   );

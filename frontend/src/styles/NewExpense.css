@@ -1,19 +1,18 @@
 .expense-form {
-  width: 90%;
-  margin: 20px auto;
-  /* background: #f9f9f9; */
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-lg);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
-.expense-form input,
-.expense-form select,
-.expense-form button {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+.expense-form h3 {
+  margin: 0 0 var(--space-xs);
+}
+
+.expense-form label {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-top: var(--space-xs);
 }

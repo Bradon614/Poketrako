@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { LuCheck, LuPencil, LuTrash2 } from 'react-icons/lu';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../api';
+import '../styles/Categories.css';
 
 const Categories = () => {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(null);
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
@@ -20,7 +22,8 @@ const Categories = () => {
     }
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (e) => {
+    e.preventDefault();
     if (!newName.trim()) return;
     setError('');
     try {
@@ -58,40 +61,53 @@ const Categories = () => {
   return (
     <div className="category-manager">
       <h3>Catégories</h3>
-      {error && <p className="error">{error}</p>}
-      <input
-        type="text"
-        placeholder="Nouvelle catégorie"
-        value={newName}
-        onChange={(e) => setNewName(e.target.value)}
-      />
-      <button onClick={handleCreate}>Ajouter</button>
+      {error && <p className="form-error">{error}</p>}
 
-      <ul>
-        {categories.map(cat => (
-          <li key={cat.id}>
-            {editingId === cat.id ? (
-              <>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                />
-                <button onClick={() => handleUpdate(cat.id)}>Valider</button>
-              </>
-            ) : (
-              <>
-                {cat.name}
-                <button onClick={() => {
-                  setEditingId(cat.id);
-                  setEditName(cat.name);
-                }}>✏️</button>
-                <button onClick={() => handleDelete(cat.id)}>🗑️</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+      <form className="add-row" onSubmit={handleCreate}>
+        <input
+          className="field"
+          type="text"
+          placeholder="Nouvelle catégorie"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <button type="submit" className="btn btn-primary btn-sm">Ajouter</button>
+      </form>
+
+      {!categories && <p className="state-message">Chargement…</p>}
+      {categories && categories.length === 0 && (
+        <p className="state-message">Aucune catégorie pour l'instant.</p>
+      )}
+
+      {categories && categories.length > 0 && (
+        <ul>
+          {categories.map(cat => (
+            <li key={cat.id}>
+              {editingId === cat.id ? (
+                <>
+                  <input
+                    className="field"
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                  <div className="actions">
+                    <button onClick={() => handleUpdate(cat.id)} aria-label="Valider"><LuCheck /></button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span>{cat.name}</span>
+                  <div className="actions">
+                    <button onClick={() => { setEditingId(cat.id); setEditName(cat.name); }} aria-label="Modifier"><LuPencil /></button>
+                    <button onClick={() => handleDelete(cat.id)} aria-label="Supprimer"><LuTrash2 /></button>
+                  </div>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

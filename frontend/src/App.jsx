@@ -7,6 +7,7 @@ import NewExpense from './components/NewExpense';
 import IncomeTable from './components/IncomeTable';
 import Categories from './components/Categories';
 import ProtectedRoute from './components/ProtectedRoute';
+import AppLayout from './components/AppLayout';
 
 function App() {
   return (
@@ -15,10 +16,22 @@ function App() {
         <Route path="/" element={<Intro />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/expenses" element={<ProtectedRoute><ExpenseTable /></ProtectedRoute>} />
-        <Route path="/expenses/new" element={<ProtectedRoute><NewExpense /></ProtectedRoute>} />
-        <Route path="/incomes" element={<ProtectedRoute><IncomeTable /></ProtectedRoute>} />
-        <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+        <Route
+          path="/expenses"
+          element={<ProtectedRoute><AppLayout><ExpenseTable /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/expenses/new"
+          element={<ProtectedRoute><AppLayout><NewExpense /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/incomes"
+          element={<ProtectedRoute><AppLayout><IncomeTable /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/categories"
+          element={<ProtectedRoute><AppLayout><Categories /></AppLayout></ProtectedRoute>}
+        />
         <Route path="*" element={<p style={{ padding: '2rem' }}>Page introuvable.</p>} />
       </Routes>
     </Router>

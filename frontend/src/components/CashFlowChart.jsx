@@ -2,25 +2,30 @@ import { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
 import { getIncomes, getExpenses } from '../api';
+import '../styles/CashFlowChart.css';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
+// Canvas rendering can't resolve CSS custom properties, so the chart series
+// colors are literal values kept in sync with --color-chart-income/expense
+// in styles/theme.css.
+const COLOR_INCOME = 'rgba(22, 163, 74, 0.75)';
+const COLOR_EXPENSE = 'rgba(220, 38, 38, 0.75)';
+const COLOR_TEXT_MUTED = '#6b7280';
+const COLOR_GRID = '#e5e7eb';
+
+const emptyChartData = {
+  labels: [],
+  datasets: [
+    { label: 'Entrées (€)', data: [], backgroundColor: COLOR_INCOME },
+    { label: 'Sorties (€)', data: [], backgroundColor: COLOR_EXPENSE },
+  ],
+};
+
 const CashFlowChart = () => {
-  const [chartData, setChartData] = useState({
-    labels: [],
-    datasets: [
-      {
-        label: 'Entrées (€)',
-        data: [],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-      },
-      {
-        label: 'Sorties (€)',
-        data: [],
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-      },
-    ],
-  });
+  const [chartData, setChartData] = useState(emptyChartData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -30,45 +35,39 @@ const CashFlowChart = () => {
         const params = { start: sixMonthsAgo.toISOString().split('T')[0] };
 
         const [incomes, expenses] = await Promise.all([
-            getIncomes(params),
-            getExpenses(params)
+          getIncomes(params),
+          getExpenses(params)
         ]);
 
         const monthlyData = {};
 
-        incomes.forEach(item => {
-            const month = new Date(item.date).toLocaleString('default', { month: 'short', year: 'numeric' });
-            if (!monthlyData[month]) monthlyData[month] = { income: 0, expense: 0 };
-            monthlyData[month].income += Number(item.amount);
+        // Expenses can have no date (categoryId/date are both optional), so
+        // skip anything without one instead of bucketing it under 1970.
+        incomes.filter(item => item.date).forEach(item => {
+          const month = new Date(item.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+          if (!monthlyData[month]) monthlyData[month] = { income: 0, expense: 0 };
+          monthlyData[month].income += Number(item.amount);
         });
 
-        expenses.forEach(item => {
-            const month = new Date(item.date).toLocaleString('default', { month: 'short', year: 'numeric' });
-            if (!monthlyData[month]) monthlyData[month] = { income: 0, expense: 0 };
-            monthlyData[month].expense += Number(item.amount);
+        expenses.filter(item => item.date).forEach(item => {
+          const month = new Date(item.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+          if (!monthlyData[month]) monthlyData[month] = { income: 0, expense: 0 };
+          monthlyData[month].expense += Number(item.amount);
         });
 
         const labels = Object.keys(monthlyData);
-        const incomeData = labels.map(month => monthlyData[month].income);
-        const expenseData = labels.map(month => monthlyData[month].expense);
 
         setChartData({
           labels,
           datasets: [
-            {
-              label: 'Entrées (€)',
-              data: incomeData,
-              backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            },
-            {
-              label: 'Sorties (€)',
-              data: expenseData,
-              backgroundColor: 'rgba(255, 99, 132, 0.6)',
-            },
+            { label: 'Entrées (€)', data: labels.map(m => monthlyData[m].income), backgroundColor: COLOR_INCOME },
+            { label: 'Sorties (€)', data: labels.map(m => monthlyData[m].expense), backgroundColor: COLOR_EXPENSE },
           ],
         });
-      } catch (error) {
-        console.error("Erreur de récupération des données du graphique :", error);
+      } catch (err) {
+        setError(err.message || 'Erreur de récupération des données du graphique');
+      } finally {
+        setLoading(false);
       }
     };
     fetchChartData();
@@ -77,18 +76,26 @@ const CashFlowChart = () => {
   const options = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' },
+      legend: { position: 'top', labels: { color: COLOR_TEXT_MUTED } },
       tooltip: { mode: 'index', intersect: false },
     },
     scales: {
-      y: { beginAtZero: true },
+      x: { ticks: { color: COLOR_TEXT_MUTED }, grid: { color: COLOR_GRID } },
+      y: { beginAtZero: true, ticks: { color: COLOR_TEXT_MUTED }, grid: { color: COLOR_GRID } },
     },
   };
 
   return (
-    <div className="chart-container">
+    <div className="chart-container card">
       <h3>Flux de trésorerie mensuel</h3>
-      <Bar data={chartData} options={options} />
+      {error && <p className="state-message state-error">{error}</p>}
+      {!error && loading && <p className="state-message">Chargement…</p>}
+      {!error && !loading && chartData.labels.length === 0 && (
+        <p className="state-message">Pas encore de données sur les 6 derniers mois.</p>
+      )}
+      {!error && !loading && chartData.labels.length > 0 && (
+        <Bar data={chartData} options={options} />
+      )}
     </div>
   );
 };

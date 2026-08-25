@@ -1,0 +1,17 @@
+.budget-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.95rem;
+}
+
+.budget-alert svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}

@@ -42,7 +42,7 @@ Poketrako/
 | Auth     | JSON Web Tokens (`jsonwebtoken`), `bcrypt` password hashing |
 | Security | `helmet` (HTTP security headers), `express-rate-limit` (auth brute-force protection), origin-restricted CORS |
 | Frontend | React 19, Vite 7, React Router 7, Chart.js via `react-chartjs-2` |
-| Styling  | Plain CSS |
+| Styling  | Plain CSS, light minimal design system (`src/styles/theme.css`) — flat, single-accent, no gradients |
 
 ## Prerequisites
 
@@ -201,6 +201,9 @@ must be at least 8 characters.
 - Full CRUD on expenses, incomes and categories, from the UI down to the database
 - Monthly summary cards, cash flow chart and budget alert on the dashboard
 - Protected routes redirect to login when there's no token
+- Consistent dark UI across every page, sharing one set of design tokens
+- Responsive layout (desktop/tablet/mobile) verified in the browser
+- Empty, loading and error states on every data-driven view
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
 
@@ -210,7 +213,8 @@ must be at least 8 characters.
   route — the expense form has no file field yet
 - Income and category deletion have no confirmation step
 - There are no automated tests
-- The UI is unstyled/inconsistent in places — visual design is Phase 6
+- There is no income creation form yet (incomes can only be read, not added,
+  from the UI)
 
 **Known limitations**
 
@@ -230,8 +234,8 @@ must be at least 8 characters.
 3. ~~Phase 3 — Request validation, consistent error envelope, cascading deletes~~ (done)
 4. ~~Phase 4 — Security hardening: helmet, CORS restriction, auth rate limiting~~ (done)
 5. ~~Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms~~ (done)
-6. Phase 6 — UI/UX redesign
-7. Phase 7 — Remaining features (receipts, recurring transactions, budgets)
+6. ~~Phase 6 — UI/UX redesign: shared design tokens, responsive layout, empty/loading/error states~~ (done)
+7. Phase 7 — Remaining features (income form, receipts, recurring transactions, budgets)
 8. Phase 8 — Testing
 9. Phase 9 — Deployment
 10. Phase 10 — Mobile application (React Native / Expo)

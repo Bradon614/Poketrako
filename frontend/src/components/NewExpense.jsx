@@ -21,12 +21,13 @@ const NewExpense = () => {
     endDate: ''
   });
   const [error, setError] = useState('');
+  const [categoriesError, setCategoriesError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     getCategories()
       .then(setCategories)
-      .catch((err) => console.error('Erreur de récupération des catégories :', err));
+      .catch((err) => setCategoriesError(err.message || 'Erreur de récupération des catégories'));
   }, []);
 
   const handleChange = (e) => {
@@ -61,9 +62,10 @@ const NewExpense = () => {
     <form className="expense-form" onSubmit={handleSubmit}>
       <h3>Nouvelle dépense</h3>
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="form-error">{error}</p>}
 
       <input
+        className="field"
         type="number"
         step="0.01"
         min="0.01"
@@ -73,16 +75,18 @@ const NewExpense = () => {
         onChange={handleChange}
         required
       />
-      <input type="date" name="date" value={form.date} onChange={handleChange} />
+      <input className="field" type="date" name="date" value={form.date} onChange={handleChange} />
 
-      <select name="categoryId" value={form.categoryId} onChange={handleChange}>
+      <select className="field" name="categoryId" value={form.categoryId} onChange={handleChange}>
         <option value="">Sans catégorie</option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.id}>{cat.name}</option>
         ))}
       </select>
+      {categoriesError && <p className="form-error">Catégories indisponibles : {categoriesError}</p>}
 
       <input
+        className="field"
         type="text"
         name="description"
         placeholder="Description (optionnel)"
@@ -90,7 +94,7 @@ const NewExpense = () => {
         onChange={handleChange}
       />
 
-      <select name="type" value={form.type} onChange={handleChange}>
+      <select className="field" name="type" value={form.type} onChange={handleChange}>
         {EXPENSE_TYPES.map((t) => (
           <option key={t.value} value={t.value}>{t.label}</option>
         ))}
@@ -99,13 +103,13 @@ const NewExpense = () => {
       {form.type === 'RECURRING' && (
         <>
           <label>Début</label>
-          <input type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
+          <input className="field" type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
           <label>Fin (optionnel)</label>
-          <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
+          <input className="field" type="date" name="endDate" value={form.endDate} onChange={handleChange} />
         </>
       )}
 
-      <button type="submit" disabled={submitting}>
+      <button type="submit" className="btn btn-primary" disabled={submitting}>
         {submitting ? 'Enregistrement…' : 'Ajouter'}
       </button>
     </form>

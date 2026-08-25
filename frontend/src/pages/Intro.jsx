@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/intro.css';
-import { CiMail } from "react-icons/ci";
+import { LuMail } from "react-icons/lu";
 import { login } from '../api';
 
 export default function Intro() {
@@ -43,24 +43,26 @@ export default function Intro() {
       <div className="Logincontainer">
         <h1 className='login'>Login</h1>
         <form onSubmit={handleSubmit}>
-          <CiMail />
-          <input 
-            type="email" 
-            placeholder="Email" 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
-            required 
+          <LuMail />
+          <input
+            className="field"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            value={password} 
-            onChange={e => setPassword(e.target.value)} 
-            required 
+          <input
+            className="field"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
           />
-          {error && <p className="error">{error}</p>}
+          {error && <p className="form-error">{error}</p>}
           <a href="#" className='forgot-password'>Forgot Password?</a>
-          <button type="submit" disabled={submitting}>
+          <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? "CONNEXION…" : "LOGIN"}
           </button>
           <p>

@@ -1,10 +1,9 @@
 .income-table-container {
-  margin: 20px auto;
-  width: 90%;
-  /* background: #fff; */
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: var(--space-md);
+}
+
+.income-table-container h3 {
+  margin: 0 0 var(--space-sm);
 }
 
 .income-table {
@@ -12,8 +11,16 @@
   border-collapse: collapse;
 }
 
-.income-table th, .income-table td {
-  padding: 12px;
+.income-table th,
+.income-table td {
+  padding: var(--space-sm);
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.income-table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
 }

@@ -1,227 +1,121 @@
-/* Styles de base pour tous les écrans */
-body {
-  padding: 0;
-  margin: 0;
+.bigbody {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   min-height: 100vh;
-  background-image: url('/fond.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  color: antiquewhite;
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Segoe UI', sans-serif;
 }
 
 .nav {
   width: 100%;
-  height: 8vh; /* Hauteur relative à la viewport */
-  padding: 1rem 2rem; /* Padding ajusté pour mobile */
+  padding: var(--space-md) var(--space-lg);
   display: flex;
-  gap: 1rem;
+  gap: var(--space-sm);
   align-items: center;
-  font-size: 1.25rem; /* 20px en rem pour scalabilité */
-  background-color: transparent;
-  backdrop-filter: blur(5px);
+  font-size: 1.25rem;
 }
 
-.bigbody {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap; /* Permet de passer à la ligne sur petits écrans */
+.nav .logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
 }
 
-.Logincontainer {
-  margin-top: 5rem; /* Réduit pour mobile */
-  margin-left: 2rem; /* Réduit pour mobile */
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 2rem; /* Réduit pour mobile */
-  border-radius: 15px;
-  box-shadow: 0 0 20px rgba(0, 0 0, 0.2);
-  text-align: center;
-  width: 90%; /* Largeur relative */
-  max-width: 300px;
-}
-
-input {
-  width: 100%;
-  padding: 0.75rem; /* Réduit pour mobile */
-  margin: 0.5rem 0;
-  border: none;
-  border-radius: 25px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  outline: none;
-}
-
-input::placeholder {
-  color: #ccc;
-}
-
-.forgot-password {
-  color: #bbb;
-  text-decoration: none;
-  font-size: 0.875rem; /* 14px en rem */
-  display: block;
-  margin: 0.5rem 0;
-}
-
-button {
-  width: 100%;
-  padding: 0.75rem; /* Réduit pour mobile */
-  margin-top: 1rem;
-  border: none;
-  border-radius: 25px;
-  background: linear-gradient(90deg, #4facfe, #9b59b6);
-  color: #fff;
-  font-size: 1rem; /* 16px en rem */
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-p {
-  color: #bbb;
-  margin-top: 1rem;
-  font-size: 1.25rem; /* 20px en rem */
-}
-
-p a {
-  color: #4facfe;
-  text-decoration: none;
-}
-
-form {
-  justify-content: center;
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* Réduit pour mobile */
-  margin: 1rem;
-}
-
-.logo {
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
+.nav h2 {
+  margin: 0;
+  font-size: 1.1rem;
 }
 
 .text {
-  padding: 4rem; /* Réduit pour mobile */
-  padding-left: 2rem;
+  padding: var(--space-lg);
 }
 
-/* Media Queries pour responsive design */
+.text h1 {
+  font-size: 2rem;
+}
 
-/* Tablettes (de 600px à 1024px) */
+.text p {
+  color: var(--color-text-muted);
+  margin: 0.25rem 0;
+  max-width: 32rem;
+}
+
+.Logincontainer {
+  margin: 3rem auto 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  width: 90%;
+  max-width: 340px;
+}
+
+.Logincontainer form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.login {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.5rem;
+}
+
+.forgot-password {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  display: block;
+  margin: var(--space-xs) 0;
+}
+
+.Logincontainer p {
+  color: var(--color-text-muted);
+  margin-top: var(--space-sm);
+}
+
+.Logincontainer p a {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Tablets */
 @media screen and (min-width: 600px) and (max-width: 1024px) {
-  .nav {
-    padding: 1.5rem 3rem;
-    font-size: 1.5rem;
-  }
-
   .Logincontainer {
-    margin-top: 6rem;
-    margin-left: 3rem;
+    margin-top: 4rem;
     padding: 2.5rem;
     max-width: 400px;
   }
-
-  input {
-    padding: 1rem;
-  }
-
-  button {
-    padding: 1rem;
-    font-size: 1.125rem;
-  }
-
-  .text {
-    padding: 6rem;
-    padding-left: 3rem;
-  }
 }
 
-/* Desktop (1024px et plus) */
+/* Desktop */
 @media screen and (min-width: 1024px) {
-  .nav {
-    padding: 2rem 4rem;
-    font-size: 1.75rem;
-  }
-
   .bigbody {
-    flex-wrap: nowrap; /* Retourne à une seule ligne */
+    flex-wrap: nowrap;
   }
 
   .Logincontainer {
-    margin-top: 8rem;
-    margin-left: 4rem;
+    margin: 6rem 4rem 0 auto;
     padding: 3rem;
-    max-width: 500px;
-  }
-
-  input {
-    padding: 1.25rem;
-  }
-
-  button {
-    padding: 1.25rem;
-    font-size: 1.25rem;
-  }
-
-  .text {
-    padding: 8rem;
-    padding-left: 4rem;
+    max-width: 420px;
   }
 }
 
-/* Mobile (jusqu'à 600px) */
+/* Mobile */
 @media screen and (max-width: 600px) {
   .nav {
-    padding: 1rem;
-    font-size: 1rem;
-    height: 6vh;
+    padding: var(--space-sm);
+  }
+
+  .text {
+    padding: var(--space-md);
   }
 
   .Logincontainer {
-    margin: 2rem auto; /* Centré avec marge */
+    margin: 2rem auto;
     width: 85%;
     padding: 1.5rem;
   }
-
-  input {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  button {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .text {
-    padding: 2rem;
-    padding-left: 1rem;
-  }
-
-  .logo {
-    width: 40px;
-    height: 40px;
-  }
-
-  p {
-    font-size: 1rem;
-  }
 }
-
-/* button{
-    position: absolute;
-    bottom: 4rem;
-    left: 4rem;
-    font-size: 25px;
-    border-radius: 5px;
-    color:whitesmoke;
-} */
-
-
