@@ -50,7 +50,7 @@ async function login(req, res) {
 
 async function getMe(req, res) {
   try {
-    const userId = req.userId; // depuis ton middleware d'auth
+    const userId = req.user.id;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     res.json({ email: user.email, id: user.id });
   } catch (err) {

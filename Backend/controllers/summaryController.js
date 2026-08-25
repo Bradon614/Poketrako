@@ -86,8 +86,8 @@ exports.getAlerts = async (req, res) => {
             }),
         ]);
 
-        const income = result[0]._sum.amount || 0;
-        const expenses = result[1]._sum.amount || 0;
+        const income = Number(result[0]._sum.amount || 0);
+        const expenses = Number(result[1]._sum.amount || 0);
 
         if (expenses > income) {
             res.json({

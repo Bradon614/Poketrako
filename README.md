@@ -101,10 +101,13 @@ npx prisma generate
 ```
 
 The schema defines `User`, `Category`, `Expense`, `Income` and `ReceiptUpload`.
+Categories belong to a single user (`Category.userId`, unique per user+name),
+and `Expense.categoryId` is optional so an expense can exist before it is
+categorized.
 
-> **Note:** there are no seeded categories yet, and `Expense.categoryId` is
-> required, so expenses cannot be created until categories exist. This is a known
-> schema issue scheduled for a later phase.
+> **Note:** there is no seed data yet — a new user starts with zero categories.
+> There is also no cascading delete: removing a user does not remove their
+> expenses/incomes/categories at the database level.
 
 ## Running the project
 
@@ -132,15 +135,39 @@ npm run preview   # serve the production build locally
 
 ## API
 
-| Method | Endpoint            | Auth | Status |
-|--------|---------------------|------|--------|
-| `GET`  | `/health`           | no   | Working |
-| `POST` | `/api/auth/signup`  | no   | Working |
-| `POST` | `/api/auth/login`   | no   | Working — returns a JWT valid for 24h |
-| `GET`  | `/api/auth/me`      | yes  | Working |
-| `GET`  | `/api/expenses`     | no   | Placeholder — returns static text |
+All endpoints are prefixed with `/api`. Authenticated requests use
+`Authorization: Bearer <token>`.
 
-Authenticated requests use `Authorization: Bearer <token>`.
+| Method   | Endpoint              | Auth | Description |
+|----------|------------------------|------|-------------|
+| `GET`    | `/health`              | no   | Liveness check |
+| `POST`   | `/auth/signup`         | no   | Create a user |
+| `POST`   | `/auth/login`          | no   | Returns a JWT valid for 24h |
+| `GET`    | `/auth/me`             | yes  | Current user |
+| `GET`    | `/expenses`            | yes  | List expenses (`start`, `end`, `categoryId`, `type`, `_sort`, `_limit`) |
+| `GET`    | `/expenses/:id`        | yes  | Get one expense |
+| `POST`   | `/expenses`            | yes  | Create an expense |
+| `PUT`    | `/expenses/:id`        | yes  | Update an expense |
+| `DELETE` | `/expenses/:id`        | yes  | Delete an expense |
+| `GET`    | `/incomes`             | yes  | List incomes |
+| `GET`    | `/incomes/:id`         | yes  | Get one income |
+| `POST`   | `/incomes`             | yes  | Create an income |
+| `PUT`    | `/incomes/:id`         | yes  | Update an income |
+| `DELETE` | `/incomes/:id`         | yes  | Delete an income |
+| `GET`    | `/categories`          | yes  | List the current user's categories |
+| `POST`   | `/categories`          | yes  | Create a category |
+| `PUT`    | `/categories/:id`      | yes  | Update a category |
+| `DELETE` | `/categories/:id`      | yes  | Delete a category (blocked if in use) |
+| `GET`    | `/summary/monthly`     | yes  | Income/expenses/balance for a given month |
+| `GET`    | `/summary`             | yes  | Income/expenses/balance for a date range (`start`, `end`) |
+| `GET`    | `/summary/alerts`      | yes  | Whether expenses exceed income this month |
+
+Every resource is scoped to the authenticated user — a JWT can only read or
+modify its own data.
+
+Unmatched routes return `404 { "message": "Route non trouvée" }`, and unhandled
+server errors return `500 { "message": "Erreur serveur interne" }` via a
+centralized error handler in `server.js`.
 
 ## Current status
 
@@ -152,31 +179,32 @@ Authenticated requests use `Authorization: Bearer <token>`.
 
 **Not working yet**
 
-- Expense, income, category and summary endpoints are written as controllers but
-  are not mounted on any route
-- The dashboard, expense table, income table and category screens render, but the
-  API calls behind them return 404 until those routes exist
+- The frontend still uses its own ad-hoc `fetch` calls per page/component
+  rather than the shared functions in `src/api.js`; several screens don't call
+  the new endpoints yet
 - The signup page form is not wired to the API
-- There is no route protection: `/dashboard` is reachable without a token
-- Receipt upload middleware exists but is not connected to any route
+- There is no route protection on the frontend: `/dashboard` is reachable
+  without a token (the API itself does reject unauthenticated requests)
+- Receipt upload middleware (`multer`) exists but is not connected to any route
 - There are no automated tests
 
 **Known limitations**
 
-- No input validation on the API
+- No request body validation on the API (e.g. malformed dates/amounts surface
+  as raw Prisma errors)
 - No rate limiting or security headers
 - CORS is open to all origins
-- Categories are global rather than per-user
+- No cascading deletes: deleting a user does not delete their data
 
 ## Roadmap
 
 1. ~~Phase 1 — Make the project run again~~ (done)
-2. Phase 2 — Backend stabilization: mount the missing routes, central error handling
-3. Phase 3 — Database corrections: per-user categories, money precision, seeds
+2. ~~Phase 2 — Backend stabilization: mount the missing routes, central error handling, per-user categories~~ (done)
+3. Phase 3 — Request validation, consistent error responses, remaining schema corrections
 4. Phase 4 — Authentication and security hardening
-5. Phase 5 — Frontend foundation: real API client, auth guard, working forms
+5. Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms
 6. Phase 6 — UI/UX redesign
-7. Phase 7 — Remaining features
+7. Phase 7 — Remaining features (receipts, recurring transactions, budgets)
 8. Phase 8 — Testing
 9. Phase 9 — Deployment
 10. Phase 10 — Mobile application (React Native / Expo)
