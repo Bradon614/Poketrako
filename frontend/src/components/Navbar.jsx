@@ -12,6 +12,7 @@ const Navbar = () => {
   return (
     <div className="navbar">
       <div className="navbar-left">
+        <img src="/logo.svg" alt="Poketrako" className="navbar-logo" />
         <h1>Poketrako</h1>
       </div>
       <div className="navbar-right">
