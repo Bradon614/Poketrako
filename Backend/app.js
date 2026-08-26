@@ -7,6 +7,14 @@ const helmet = require('helmet');
 
 const app = express();
 
+// Render (and most PaaS hosts) sit the app behind a reverse proxy, which
+// sets X-Forwarded-For. Without this, express-rate-limit either throws a
+// validation error or rate-limits every visitor as if they shared the
+// proxy's IP. `1` trusts exactly one hop, matching Render's setup.
+if (process.env.TRUST_PROXY) {
+  app.set('trust proxy', 1);
+}
+
 // The API and the frontend are served from different origins, so uploaded
 // files must stay loadable cross-origin (e.g. an <img> on the frontend
 // pointing at /uploads/...).

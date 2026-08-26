@@ -288,6 +288,82 @@ must be at least 8 characters.
   validation before rendering) — this is a UX guard, not a security
   boundary; the API is what actually enforces access control
 
+## Deployment
+
+Stack: **Vercel** (frontend), **Render** (backend API), **Neon** (Postgres) —
+all have a free tier that doesn't need a credit card, and none of them need a
+server to maintain by hand.
+
+### 1. Database — Neon
+
+1. Create a project at [neon.tech](https://neon.tech).
+2. Copy the connection string Neon gives you (the plain, non-pooled one —
+   this backend is a single long-lived Node process, not serverless
+   functions, so Prisma's own connection pooling is enough and there's no
+   need for Neon's PgBouncer pooler). It looks like
+   `postgresql://user:password@ep-xxx.neon.tech/neondb?sslmode=require`.
+3. Keep it — it's the `DATABASE_URL` used in the next step.
+
+### 2. Backend — Render
+
+Uses the [`render.yaml`](render.yaml) Blueprint at the repo root.
+
+1. Render dashboard → **New** → **Blueprint** → select this repo.
+2. Render reads `render.yaml` and proposes a `poketrako-api` web service
+   (free plan, rooted at `Backend/`). Accept it.
+3. Fill in the three secrets it asks for (left blank in the Blueprint on
+   purpose so they're never committed):
+   - `DATABASE_URL` → the Neon connection string from step 1
+   - `JWT_SECRET` → a long random value, e.g. `openssl rand -base64 32`
+   - `FRONTEND_URL` → leave a placeholder for now (`http://localhost:5173`
+     works), you'll update it once the Vercel URL exists (step 3)
+4. Deploy. The build runs `npx prisma generate`; the start command runs
+   `npx prisma migrate deploy` before `node server.js`, so the database
+   schema is created/updated automatically on every deploy.
+5. Once live, note the service URL, e.g. `https://poketrako-api.onrender.com`.
+
+> **Free plan cold starts:** Render's free web services spin down after
+> ~15 minutes of inactivity. The first request after a quiet period can take
+> 30–60 seconds while it wakes back up — expected, not a bug.
+
+> **Uploaded receipts are not persistent on the free plan.** Render's free
+> tier has an ephemeral filesystem, so files in `Backend/uploads/` are lost
+> on every redeploy or restart. Fine for a demo/student project; a real
+> deployment would swap local disk storage for something like S3 — not done
+> here, to avoid adding cloud-storage complexity before it's actually needed.
+
+### 3. Frontend — Vercel
+
+Uses [`frontend/vercel.json`](frontend/vercel.json) for SPA routing (without
+it, refreshing on a route like `/dashboard` would 404 — Vercel needs to be
+told to always fall back to `index.html` and let React Router take over).
+
+1. Vercel dashboard → **Add New** → **Project** → import this repo.
+2. Set **Root Directory** to `frontend` (Vercel auto-detects the Vite
+   preset once you do).
+3. Add one environment variable: `VITE_API_URL` →
+   `https://poketrako-api.onrender.com/api` (the Render URL from step 2,
+   with `/api` appended).
+4. Deploy. Note the resulting URL, e.g. `https://poketrako.vercel.app`.
+
+### 4. Close the loop — CORS
+
+Go back to the Render service → Environment → update `FRONTEND_URL` to the
+real Vercel URL from step 3 (exact match, no trailing slash), and redeploy.
+CORS checks an exact origin match, so this step is what actually lets the
+deployed frontend talk to the deployed API — skipping it leaves every
+request blocked by the browser with a CORS error.
+
+### What's deliberately not done
+
+- **Custom domain / HTTPS setup beyond the platforms' defaults** — Vercel
+  and Render both provision HTTPS automatically on their `*.vercel.app` /
+  `*.onrender.com` subdomains, which is enough for a student project.
+- **CI pipeline** (running the backend test suite before deploy) — the test
+  suite exists (see [Testing](#testing)) but isn't wired into either
+  platform's deploy flow yet.
+- **Persistent file storage for receipts** — see the note above.
+
 ## Roadmap
 
 1. ~~Phase 1 — Make the project run again~~ (done)
@@ -300,7 +376,7 @@ must be at least 8 characters.
    recurring transactions, receipt upload
 8. Phase 8 — Testing: ~~backend (Vitest + Supertest, real test database)~~ (done);
    frontend component/e2e tests still to do
-9. Phase 9 — Deployment
+9. ~~Phase 9 — Deployment: Vercel + Render + Neon, see [Deployment](#deployment)~~ (done)
 10. Phase 10 — Mobile application (React Native / Expo)
 
 ## License

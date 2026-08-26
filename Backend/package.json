@@ -18,6 +18,9 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "test": "NODE_ENV=test vitest run",
     "test:watch": "NODE_ENV=test vitest",
