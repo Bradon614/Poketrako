@@ -75,7 +75,9 @@ const NewExpense = () => {
         onChange={handleChange}
         required
       />
-      <input className="field" type="date" name="date" value={form.date} onChange={handleChange} />
+      {form.type === 'ONE_TIME' && (
+        <input className="field" type="date" name="date" value={form.date} onChange={handleChange} />
+      )}
 
       <select className="field" name="categoryId" value={form.categoryId} onChange={handleChange}>
         <option value="">Sans catégorie</option>
@@ -104,7 +106,7 @@ const NewExpense = () => {
         <>
           <label>Début</label>
           <input className="field" type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
-          <label>Fin (optionnel)</label>
+          <label>Fin (optionnel — 12 mois par défaut si laissé vide)</label>
           <input className="field" type="date" name="endDate" value={form.endDate} onChange={handleChange} />
         </>
       )}

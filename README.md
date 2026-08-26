@@ -208,6 +208,9 @@ must be at least 8 characters.
 - Full expense and income creation forms, reachable from their respective pages
 - Monthly budget: set from the dashboard, shown as a progress bar, and used by
   the budget alert (falls back to the income comparison when no budget is set)
+- Recurring expenses: creating one with a start date (and optional end date)
+  generates one real row per month, clamped to the last valid day of shorter
+  months (e.g. Jan 31 -> Feb 28/29)
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
 
@@ -217,10 +220,9 @@ must be at least 8 characters.
   route — the expense form has no file field yet
 - No editing or deletion from the UI for expenses/incomes (creation and
   listing only); category editing/deletion exists but with no confirmation step
-- Recurring transactions are a label + optional start/end dates on an expense
-  only — nothing automatically generates future occurrences
-- Budgets: `User.budget` exists in the database schema but nothing in the
-  app reads or writes it yet
+- Recurring expenses are generated once at creation time, capped at 60
+  occurrences; a series isn't linked as a group afterward, so editing/deleting
+  only ever affects one occurrence at a time, not the whole series
 - There are no automated tests
 
 **Known limitations**
@@ -245,8 +247,8 @@ must be at least 8 characters.
 7. Phase 7 — Remaining features, tackled incrementally:
    - ~~Income creation form~~ (done)
    - ~~Budgets: set/read `User.budget`, dashboard progress bar, budget-aware alert~~ (done)
+   - ~~Recurring transactions: generate real monthly occurrences at creation time~~ (done)
    - Receipts (needs multer wired to a route + a file field in the expense form)
-   - Recurring transactions (needs a job/scheduler to generate occurrences)
 8. Phase 8 — Testing
 9. Phase 9 — Deployment
 10. Phase 10 — Mobile application (React Native / Expo)

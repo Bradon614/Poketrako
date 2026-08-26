@@ -8,6 +8,8 @@ const { sendError } = require('../utils/errors');
 
 const prisma = new PrismaClient();
 const EXPENSE_TYPES = ['ONE_TIME', 'RECURRING'];
+const MAX_RECURRING_OCCURRENCES = 60; // sanity cap (5 years of monthly occurrences)
+const DEFAULT_RECURRING_MONTHS = 12; // horizon used when no endDate is given
 
 // Validates the subset of fields present in `body` (all optional so the same
 // function works for create — where amount is required separately — and
@@ -32,6 +34,36 @@ function validateExpenseFields(body, { requireAmount }) {
     return `type doit être l'un de : ${EXPENSE_TYPES.join(', ')}`;
   }
   return null;
+}
+
+function daysInMonth(year, monthIndex) {
+  // Date-only values are stored/compared as UTC midnight throughout the app
+  // (that's how "2026-01-31" parses), so month-length math must stay in UTC
+  // too — mixing in local-timezone getters/constructors here shifts the
+  // stored date by a day for any server timezone that isn't UTC.
+  return new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+}
+
+// Builds one Date per monthly occurrence between startDate and endDate
+// (inclusive), keeping the same day-of-month as startDate and clamping to
+// the last day of shorter months (e.g. Jan 31 -> Feb 28/29, not Mar 3).
+function buildMonthlyOccurrences(startDate, endDate) {
+  const day = startDate.getUTCDate();
+  const dates = [];
+  let year = startDate.getUTCFullYear();
+  let monthIndex = startDate.getUTCMonth();
+
+  while (dates.length < MAX_RECURRING_OCCURRENCES) {
+    const occurrence = new Date(Date.UTC(year, monthIndex, Math.min(day, daysInMonth(year, monthIndex))));
+    if (occurrence > endDate) break;
+    dates.push(occurrence);
+    monthIndex += 1;
+    if (monthIndex > 11) {
+      monthIndex = 0;
+      year += 1;
+    }
+  }
+  return dates;
 }
 
 exports.getExpenses = async (req, res) => {
@@ -77,6 +109,41 @@ exports.createExpense = async (req, res) => {
 
     const { amount, date, categoryId, description, type, startDate, endDate } = req.body;
 
+    if (type === 'RECURRING') {
+      if (!startDate) {
+        return res.status(400).json({ message: 'La date de début est requise pour une dépense récurrente' });
+      }
+
+      const start = new Date(startDate);
+      const end = endDate
+        ? new Date(endDate)
+        : new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + DEFAULT_RECURRING_MONTHS - 1, start.getUTCDate()));
+      if (end < start) {
+        return res.status(400).json({ message: 'La date de fin doit être postérieure à la date de début' });
+      }
+
+      const occurrences = buildMonthlyOccurrences(start, end);
+      const sharedData = {
+        amount,
+        categoryId: categoryId ? parseInt(categoryId, 10) : undefined,
+        description,
+        type,
+        startDate: start,
+        endDate: endDate ? end : undefined,
+        userId: req.user.id
+      };
+
+      const created = await prisma.expense.createManyAndReturn({
+        data: occurrences.map((occurrenceDate) => ({ ...sharedData, date: occurrenceDate }))
+      });
+
+      return res.status(201).json({
+        message: `${created.length} occurrence(s) créée(s)`,
+        count: created.length,
+        expenses: created
+      });
+    }
+
     const expense = await prisma.expense.create({
       data: {
         amount,
@@ -84,8 +151,6 @@ exports.createExpense = async (req, res) => {
         categoryId: categoryId ? parseInt(categoryId, 10) : undefined,
         description,
         type: type || undefined,
-        startDate: startDate ? new Date(startDate) : undefined,
-        endDate: endDate ? new Date(endDate) : undefined,
         userId: req.user.id
       }
     });
