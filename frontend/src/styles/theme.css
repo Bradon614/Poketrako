@@ -73,7 +73,7 @@
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* Layout */
-  --sidebar-width: 220px;
+  --sidebar-width: 248px;
   --sidebar-width-collapsed: 64px;
   --navbar-height: 64px;
 }

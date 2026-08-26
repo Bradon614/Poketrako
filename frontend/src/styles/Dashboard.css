@@ -36,11 +36,10 @@
 }
 
 @media screen and (max-width: 768px) {
-  .dashboard-layout {
-    flex-direction: column;
-  }
-
   .dashboard-main {
     padding: var(--space-md);
+    /* The sidebar is a fixed bottom bar at this width, so it no longer takes
+       space in the flow — reserve room so the last card isn't hidden under it. */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }

@@ -1,34 +1,51 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LuLayoutDashboard, LuWallet, LuBanknote, LuFolder, LuLogOut, LuMenu } from 'react-icons/lu';
+import { NavLink } from 'react-router-dom';
+import { LuLayoutDashboard, LuWallet, LuBanknote, LuFolder, LuPanelLeftClose, LuPanelLeftOpen } from 'react-icons/lu';
 import '../styles/Sidebar.css';
 
-const navClass = ({ isActive }) => (isActive ? 'active' : undefined);
+const NAV_ITEMS = [
+  { to: '/dashboard', label: 'Accueil', Icon: LuLayoutDashboard },
+  { to: '/expenses', label: 'Dépenses', Icon: LuWallet },
+  { to: '/incomes', label: 'Revenus', Icon: LuBanknote },
+  { to: '/categories', label: 'Catégories', Icon: LuFolder }
+];
 
+const navClass = ({ isActive }) => `nav-item${isActive ? ' active' : ''}`;
+
+// Navigation only — the logout action lives in the Navbar so it doesn't have
+// to be duplicated between the desktop sidebar and the mobile bottom bar.
+// On desktop this is a vertical rail; under 768px it becomes a fixed bottom
+// tab bar (see Sidebar.css).
 const Sidebar = () => {
   const [open, setOpen] = useState(true);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/');
-  };
+  const ToggleIcon = open ? LuPanelLeftClose : LuPanelLeftOpen;
 
   return (
-    <div className={`sidebar ${open ? 'open' : 'collapsed'}`}>
+    <aside className={`sidebar ${open ? 'open' : 'collapsed'}`}>
       <div className="sidebar-header">
-        <button className="toggle-btn" onClick={() => setOpen(!open)} aria-label="Réduire le menu">
-          <LuMenu />
+        <img src="/logo.svg" alt="" className="sidebar-logo" />
+        <span className="sidebar-brand">Poketrako</span>
+        <button
+          className="toggle-btn"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? 'Réduire le menu' : 'Déployer le menu'}
+        >
+          <ToggleIcon />
         </button>
       </div>
+
       <nav>
-        <NavLink to="/dashboard" className={navClass}><LuLayoutDashboard /> <span>Dashboard</span></NavLink>
-        <NavLink to="/expenses" className={navClass}><LuWallet /> <span>Dépenses</span></NavLink>
-        <NavLink to="/incomes" className={navClass}><LuBanknote /> <span>Revenus</span></NavLink>
-        <NavLink to="/categories" className={navClass}><LuFolder /> <span>Catégories</span></NavLink>
-        <button className="logout-btn" onClick={handleLogout}><LuLogOut /> <span>Déconnexion</span></button>
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.Icon;
+          return (
+            <NavLink key={item.to} to={item.to} className={navClass} title={item.label}>
+              <Icon />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
-    </div>
+    </aside>
   );
 };
 

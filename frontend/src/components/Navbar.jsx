@@ -1,7 +1,10 @@
-import { LuCalendar } from 'react-icons/lu';
+import { useNavigate } from 'react-router-dom';
+import { LuCalendar, LuLogOut } from 'react-icons/lu';
 import '../styles/Navbar.css';
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
   const today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
@@ -9,16 +12,28 @@ const Navbar = () => {
     year: 'numeric'
   });
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/');
+  };
+
   return (
-    <div className="navbar">
-      <div className="navbar-left">
-        <img src="/logo.svg" alt="Poketrako" className="navbar-logo" />
-        <h1>Poketrako</h1>
+    <header className="navbar">
+      {/* Only shown under 768px, where the sidebar turns into a bottom bar
+          and loses its own logo/brand header. */}
+      <div className="navbar-brand">
+        <img src="/logo.svg" alt="" className="navbar-logo" />
+        <span>Poketrako</span>
       </div>
-      <div className="navbar-right">
-        <span className="navbar-date"><LuCalendar /> {today}</span>
-      </div>
-    </div>
+
+      <span className="navbar-date"><LuCalendar /> {today}</span>
+
+      {/* The label is hidden on mobile, so the name has to come from aria-label. */}
+      <button className="navbar-logout" onClick={handleLogout} aria-label="Déconnexion">
+        <LuLogOut />
+        <span>Déconnexion</span>
+      </button>
+    </header>
   );
 };
 

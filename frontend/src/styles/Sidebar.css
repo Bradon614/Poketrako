@@ -1,11 +1,22 @@
+/* ---------------------------------------------------------------------------
+ * Two distinct navigation shapes from one component:
+ *  - >=768px : a vertical rail pinned to the left, collapsible to icons only
+ *  - <768px  : a fixed bottom tab bar, the standard mobile app pattern
+ * ------------------------------------------------------------------------- */
+
 .sidebar {
   width: var(--sidebar-width);
   flex-shrink: 0;
-  min-height: 100vh;
-  background-color: var(--color-surface);
+  align-self: stretch;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-sm);
+  background: var(--color-surface);
   border-right: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: var(--space-md);
   transition: width var(--dur-base) var(--ease-out);
 }
 
@@ -13,21 +24,55 @@
   width: var(--sidebar-width-collapsed);
 }
 
+/* --- header ---------------------------------------------------------- */
+
 .sidebar-header {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-xs) 0;
+  min-height: 40px;
+}
+
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--glow-accent);
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: var(--space-xs);
   background: none;
   border: none;
-  color: var(--color-text-muted);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: var(--space-xs);
   border-radius: var(--radius-sm);
+  color: var(--color-text-faint);
+  cursor: pointer;
+  flex-shrink: 0;
   transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.toggle-btn svg {
+  width: 17px;
+  height: 17px;
 }
 
 .toggle-btn:hover {
@@ -35,64 +80,160 @@
   color: var(--color-text);
 }
 
+/* --- nav items -------------------------------------------------------- */
+
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  margin-top: var(--space-lg);
+  gap: 2px;
 }
 
-.sidebar a,
-.sidebar .logout-btn {
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  padding: var(--space-sm);
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.65rem var(--space-sm);
   border-radius: var(--radius-sm);
-  transition: background var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-fast) ease;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 0.925rem;
+  font-weight: 500;
+  text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
-  font-family: inherit;
+  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
 }
 
-.sidebar a:hover,
-.sidebar .logout-btn:hover {
+.nav-item svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
+
+.nav-item:hover {
   background-color: var(--color-surface-alt);
   color: var(--color-text);
-  transform: translateX(2px);
 }
 
-.sidebar a.active {
-  background: var(--gradient-brand);
-  color: #fff;
+.nav-item.active {
+  background: var(--color-accent-bg);
+  color: var(--color-accent-text);
   font-weight: 600;
-  box-shadow: var(--glow-accent);
 }
+
+/* Accent bar on the active item — reads as "you are here" without needing
+ * the heavier full-gradient fill. */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 55%;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  background: var(--gradient-brand);
+  box-shadow: 0 0 10px var(--color-accent);
+}
+
+/* --- collapsed rail --------------------------------------------------- */
+
+.sidebar.collapsed .sidebar-header {
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.sidebar.collapsed .sidebar-brand {
+  display: none;
+}
+
+.sidebar.collapsed .toggle-btn {
+  margin-left: 0;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar.collapsed .nav-item span {
+  display: none;
+}
+
+/* --- mobile: fixed bottom tab bar ------------------------------------- */
 
 @media screen and (max-width: 768px) {
   .sidebar,
   .sidebar.collapsed {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 20;
     width: 100%;
-    min-height: auto;
+    height: auto;
+    flex-direction: row;
+    gap: 0;
+    padding: 0;
     border-right: none;
-    border-bottom: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border);
+    background: rgba(21, 21, 31, 0.92);
+    backdrop-filter: blur(16px);
+    /* Keep the bar clear of the iPhone home indicator. */
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* The logo/brand/toggle only make sense on the desktop rail. */
+  .sidebar-header {
+    display: none;
   }
 
   .sidebar nav {
     flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: var(--space-sm);
+    width: 100%;
+    gap: 0;
   }
 
-  .sidebar a,
-  .sidebar .logout-btn {
-    font-size: 0.9rem;
-    padding: var(--space-xs) var(--space-sm);
+  .sidebar.collapsed .nav-item,
+  .nav-item {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 0.6rem 0.25rem;
+    border-radius: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .sidebar.collapsed .nav-item span,
+  .nav-item span {
+    display: block;
+  }
+
+  .nav-item svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .nav-item:hover {
+    background-color: transparent;
+  }
+
+  .nav-item.active {
+    background: transparent;
+    color: var(--color-accent-text);
+  }
+
+  /* Indicator flips from a left bar to a top bar on the tab. */
+  .nav-item.active::before {
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 42%;
+    height: 3px;
+    border-radius: 0 0 var(--radius-pill) var(--radius-pill);
+  }
+
+  .nav-item.active svg {
+    filter: drop-shadow(0 0 8px var(--color-accent));
   }
 }
