@@ -28,7 +28,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
 
   return (
     <>
-      <h2>Signup</h2>
+      <h2>Inscription</h2>
       <form onSubmit={handleSubmit}>
         <input
           className="field"
@@ -48,7 +48,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
         <input
           className="field"
           type="password"
-          placeholder="Password (8 caractères min.)"
+          placeholder="Mot de passe (8 caractères min.)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           minLength={8}
@@ -56,11 +56,11 @@ const SignupForm = ({ onSwitchToLogin }) => {
         />
         {error && <p className="form-error">{error}</p>}
         <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? 'INSCRIPTION…' : 'SIGN UP'}
+          {submitting ? 'INSCRIPTION…' : "S'INSCRIRE"}
         </button>
         <p>
-          Already have an account?{' '}
-          <button type="button" className="link-btn" onClick={onSwitchToLogin}>Login</button>
+          Déjà un compte ?{' '}
+          <button type="button" className="link-btn" onClick={onSwitchToLogin}>Connexion</button>
         </p>
       </form>
     </>

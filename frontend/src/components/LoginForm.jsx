@@ -27,7 +27,7 @@ const LoginForm = ({ onSwitchToSignup }) => {
 
   return (
     <>
-      <h1 className="login">Login</h1>
+      <h1 className="login">Connexion</h1>
       <form onSubmit={handleSubmit}>
         <LuMail />
         <input
@@ -41,19 +41,19 @@ const LoginForm = ({ onSwitchToSignup }) => {
         <input
           className="field"
           type="password"
-          placeholder="Password"
+          placeholder="Mot de passe"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
         {error && <p className="form-error">{error}</p>}
-        <a href="#" className="forgot-password">Forgot Password?</a>
+        <a href="#" className="forgot-password">Mot de passe oublié ?</a>
         <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? 'CONNEXION…' : 'LOGIN'}
+          {submitting ? 'CONNEXION…' : 'CONNEXION'}
         </button>
         <p>
-          Don't have an account?{' '}
-          <button type="button" className="link-btn" onClick={onSwitchToSignup}>Sign up</button>
+          Pas encore de compte ?{' '}
+          <button type="button" className="link-btn" onClick={onSwitchToSignup}>S'inscrire</button>
         </p>
       </form>
     </>
