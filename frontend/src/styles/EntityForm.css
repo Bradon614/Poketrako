@@ -1,4 +1,4 @@
-.expense-form {
+.entity-form {
   max-width: 480px;
   margin: 0 auto;
   padding: var(--space-lg);
@@ -7,11 +7,11 @@
   gap: var(--space-sm);
 }
 
-.expense-form h3 {
+.entity-form h3 {
   margin: 0 0 var(--space-xs);
 }
 
-.expense-form label {
+.entity-form label {
   color: var(--color-text-muted);
   font-size: 0.9rem;
   margin-top: var(--space-xs);

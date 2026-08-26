@@ -204,6 +204,7 @@ must be at least 8 characters.
 - Consistent dark UI across every page, sharing one set of design tokens
 - Responsive layout (desktop/tablet/mobile) verified in the browser
 - Empty, loading and error states on every data-driven view
+- Full expense and income creation forms, reachable from their respective pages
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
 
@@ -211,10 +212,13 @@ must be at least 8 characters.
 
 - Receipt upload middleware (`multer`) exists but is not connected to any
   route — the expense form has no file field yet
-- Income and category deletion have no confirmation step
+- No editing or deletion from the UI for expenses/incomes (creation and
+  listing only); category editing/deletion exists but with no confirmation step
+- Recurring transactions are a label + optional start/end dates on an expense
+  only — nothing automatically generates future occurrences
+- Budgets: `User.budget` exists in the database schema but nothing in the
+  app reads or writes it yet
 - There are no automated tests
-- There is no income creation form yet (incomes can only be read, not added,
-  from the UI)
 
 **Known limitations**
 
@@ -235,7 +239,11 @@ must be at least 8 characters.
 4. ~~Phase 4 — Security hardening: helmet, CORS restriction, auth rate limiting~~ (done)
 5. ~~Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms~~ (done)
 6. ~~Phase 6 — UI/UX redesign: shared design tokens, responsive layout, empty/loading/error states~~ (done)
-7. Phase 7 — Remaining features (income form, receipts, recurring transactions, budgets)
+7. Phase 7 — Remaining features, tackled incrementally:
+   - ~~Income creation form~~ (done)
+   - Receipts (needs multer wired to a route + a file field in the expense form)
+   - Recurring transactions (needs a job/scheduler to generate occurrences)
+   - Budgets (needs a UI to set/read `User.budget` and surface it on the dashboard)
 8. Phase 8 — Testing
 9. Phase 9 — Deployment
 10. Phase 10 — Mobile application (React Native / Expo)

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createExpense, getCategories } from '../api';
-import '../styles/NewExpense.css';
+import '../styles/EntityForm.css';
 
 const EXPENSE_TYPES = [
   { value: 'ONE_TIME', label: 'Ponctuelle' },
@@ -59,7 +59,7 @@ const NewExpense = () => {
   };
 
   return (
-    <form className="expense-form" onSubmit={handleSubmit}>
+    <form className="entity-form" onSubmit={handleSubmit}>
       <h3>Nouvelle dépense</h3>
 
       {error && <p className="form-error">{error}</p>}

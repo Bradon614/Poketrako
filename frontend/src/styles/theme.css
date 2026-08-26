@@ -186,3 +186,33 @@ a {
 .state-message.state-error {
   color: var(--color-danger);
 }
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.table-header h3 {
+  margin: 0;
+}
+
+.link-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.link-with-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.link-with-icon:hover {
+  text-decoration: underline;
+}

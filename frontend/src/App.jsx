@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import ExpenseTable from './components/ExpenseTable';
 import NewExpense from './components/NewExpense';
 import IncomeTable from './components/IncomeTable';
+import NewIncome from './components/NewIncome';
 import Categories from './components/Categories';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
@@ -27,6 +28,10 @@ function App() {
         <Route
           path="/incomes"
           element={<ProtectedRoute><AppLayout><IncomeTable /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/incomes/new"
+          element={<ProtectedRoute><AppLayout><NewIncome /></AppLayout></ProtectedRoute>}
         />
         <Route
           path="/categories"

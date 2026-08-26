@@ -2,10 +2,6 @@
   padding: var(--space-md);
 }
 
-.income-table-container h3 {
-  margin: 0 0 var(--space-sm);
-}
-
 .income-table {
   width: 100%;
   border-collapse: collapse;

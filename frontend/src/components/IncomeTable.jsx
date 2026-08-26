@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { LuPlus } from 'react-icons/lu';
 import { getIncomes } from '../api';
 import '../styles/IncomeTable.css';
 
@@ -19,7 +21,10 @@ const IncomeTable = () => {
 
   return (
     <div className="income-table-container card">
-      <h3>Revenus récents</h3>
+      <div className="table-header">
+        <h3>Revenus récents</h3>
+        <Link to="/incomes/new" className="link-with-icon"><LuPlus /> Nouveau revenu</Link>
+      </div>
 
       {error && <p className="state-message state-error">{error}</p>}
       {!error && !incomes && <p className="state-message">Chargement…</p>}

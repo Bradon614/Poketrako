@@ -2,36 +2,6 @@
   padding: var(--space-md);
 }
 
-.expense-table-container .table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-sm);
-}
-
-.expense-table-container .table-header h3 {
-  margin: 0;
-}
-
-.expense-table-container .table-header a {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--color-accent);
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.expense-table-container .table-header a svg {
-  width: 15px;
-  height: 15px;
-}
-
-.expense-table-container .table-header a:hover {
-  text-decoration: underline;
-}
-
 .expense-table {
   width: 100%;
   border-collapse: collapse;
