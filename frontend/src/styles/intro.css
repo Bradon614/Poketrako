@@ -15,14 +15,19 @@
 }
 
 .nav .logo {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-sm);
+  box-shadow: var(--glow-accent);
 }
 
 .nav h2 {
   margin: 0;
   font-size: 1.1rem;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .text {
@@ -30,7 +35,8 @@
 }
 
 .text h1 {
-  font-size: 2rem;
+  font-size: 2.25rem;
+  letter-spacing: -0.02em;
 }
 
 .text p {
@@ -45,7 +51,7 @@
   border: 1px solid var(--color-border);
   padding: 2rem;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), var(--glow-accent);
   text-align: center;
   width: 90%;
   max-width: 340px;
@@ -68,6 +74,11 @@
   font-size: 0.875rem;
   display: block;
   margin: var(--space-xs) 0;
+  transition: color var(--dur-fast) ease;
+}
+
+.forgot-password:hover {
+  color: var(--color-accent-text);
 }
 
 .Logincontainer p {
@@ -76,7 +87,7 @@
 }
 
 .Logincontainer p a {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-decoration: none;
   font-weight: 600;
 }

@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LuPlus, LuPaperclip, LuTrash2 } from 'react-icons/lu';
 import { getExpenses, deleteReceipt, receiptUrl } from '../api';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatMoney } from '../currency';
 import '../styles/ExpenseTable.css';
 
 const ExpenseTable = () => {
   const [expenses, setExpenses] = useState(null);
   const [error, setError] = useState('');
+  const { currency } = useCurrency();
 
   const fetchExpenses = async () => {
     try {
@@ -48,7 +51,7 @@ const ExpenseTable = () => {
             <tr>
               <th>Date</th>
               <th>Description</th>
-              <th>Montant (€)</th>
+              <th>Montant</th>
               <th>Justificatif</th>
             </tr>
           </thead>
@@ -57,7 +60,7 @@ const ExpenseTable = () => {
               <tr key={exp.id}>
                 <td>{exp.date ? new Date(exp.date).toLocaleDateString() : '—'}</td>
                 <td>{exp.description || '—'}</td>
-                <td>{Number(exp.amount).toFixed(2)}</td>
+                <td>{formatMoney(exp.amount, currency)}</td>
                 <td>
                   {exp.receiptUpload ? (
                     <span className="receipt-cell">

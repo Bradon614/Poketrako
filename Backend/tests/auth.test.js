@@ -91,6 +91,36 @@ describe('GET /api/auth/me', () => {
   });
 });
 
+describe('PUT /api/auth/currency', () => {
+  it('rejects an unsupported currency', async () => {
+    await request(app).post('/api/auth/signup').send({ email: 'henry@example.com', password: 'Sup3rSecret!' });
+    const login = await request(app).post('/api/auth/login').send({ email: 'henry@example.com', password: 'Sup3rSecret!' });
+
+    const res = await request(app)
+      .put('/api/auth/currency')
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .send({ currency: 'XYZ' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('defaults new users to MGA and allows switching to a supported currency', async () => {
+    await request(app).post('/api/auth/signup').send({ email: 'iris@example.com', password: 'Sup3rSecret!' });
+    const login = await request(app).post('/api/auth/login').send({ email: 'iris@example.com', password: 'Sup3rSecret!' });
+    const token = login.body.token;
+
+    const meRes = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+    expect(meRes.body.currency).toBe('MGA');
+
+    const putRes = await request(app).put('/api/auth/currency').set('Authorization', `Bearer ${token}`).send({ currency: 'EUR' });
+    expect(putRes.status).toBe(200);
+    expect(putRes.body.currency).toBe('EUR');
+
+    const meAfter = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+    expect(meAfter.body.currency).toBe('EUR');
+  });
+});
+
 describe('PUT /api/auth/budget', () => {
   it('rejects a negative budget', async () => {
     await request(app).post('/api/auth/signup').send({ email: 'frank@example.com', password: 'Sup3rSecret!' });

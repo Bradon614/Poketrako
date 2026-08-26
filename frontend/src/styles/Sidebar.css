@@ -6,7 +6,7 @@
   border-right: 1px solid var(--color-border);
   color: var(--color-text);
   padding: var(--space-md);
-  transition: width 0.2s ease;
+  transition: width var(--dur-base) var(--ease-out);
 }
 
 .sidebar.collapsed {
@@ -24,14 +24,15 @@
   border: none;
   color: var(--color-text-muted);
   font-size: 1.2rem;
-  line-height: 0;
   cursor: pointer;
   padding: var(--space-xs);
   border-radius: var(--radius-sm);
+  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
 }
 
 .toggle-btn:hover {
   background-color: var(--color-surface-alt);
+  color: var(--color-text);
 }
 
 .sidebar nav {
@@ -43,16 +44,13 @@
 
 .sidebar a,
 .sidebar .logout-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
   color: var(--color-text-muted);
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
   padding: var(--space-sm);
   border-radius: var(--radius-sm);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-fast) ease;
   background: none;
   border: none;
   text-align: left;
@@ -62,28 +60,18 @@
   font-family: inherit;
 }
 
-.sidebar a svg,
-.sidebar .logout-btn svg {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-}
-
-.sidebar.collapsed a span,
-.sidebar.collapsed .logout-btn span {
-  display: none;
-}
-
 .sidebar a:hover,
 .sidebar .logout-btn:hover {
   background-color: var(--color-surface-alt);
   color: var(--color-text);
+  transform: translateX(2px);
 }
 
 .sidebar a.active {
-  background: var(--color-accent-bg);
-  color: var(--color-accent-text);
+  background: var(--gradient-brand);
+  color: #fff;
   font-weight: 600;
+  box-shadow: var(--glow-accent);
 }
 
 @media screen and (max-width: 768px) {

@@ -30,7 +30,7 @@ export default function Intro() {
     <div className='bigbody'>
       <div className="bodyIntro"> 
         <div className="nav">
-          <img src="/logo.png" alt="logo Poketra" className='logo'/>
+          <img src="/logo.svg" alt="Poketrako" className='logo'/>
           <h2>Poketrako</h2> 
         </div>
         <div className="text">

@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LuPlus } from 'react-icons/lu';
 import { getIncomes } from '../api';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatMoney } from '../currency';
 import '../styles/IncomeTable.css';
 
 const IncomeTable = () => {
   const [incomes, setIncomes] = useState(null);
   const [error, setError] = useState('');
+  const { currency } = useCurrency();
 
   useEffect(() => {
     const fetchIncomes = async () => {
@@ -38,7 +41,7 @@ const IncomeTable = () => {
             <tr>
               <th>Date</th>
               <th>Source</th>
-              <th>Montant (€)</th>
+              <th>Montant</th>
               <th>Description</th>
             </tr>
           </thead>
@@ -47,7 +50,7 @@ const IncomeTable = () => {
               <tr key={income.id}>
                 <td>{new Date(income.date).toLocaleDateString()}</td>
                 <td>{income.source}</td>
-                <td>{Number(income.amount).toFixed(2)}</td>
+                <td>{formatMoney(income.amount, currency)}</td>
                 <td>{income.description || '—'}</td>
               </tr>
             ))}

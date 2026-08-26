@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { LuPencil, LuCheck, LuX } from 'react-icons/lu';
 import { getMonthlySummary, updateBudget } from '../api';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatMoney } from '../currency';
 import '../styles/BudgetSettings.css';
 
 const BudgetSettings = () => {
@@ -9,6 +11,7 @@ const BudgetSettings = () => {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const { currency } = useCurrency();
 
   const fetchSummary = async () => {
     try {
@@ -67,7 +70,7 @@ const BudgetSettings = () => {
             type="number"
             step="0.01"
             min="0"
-            placeholder="Montant (€)"
+            placeholder="Montant"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             autoFocus
@@ -82,7 +85,7 @@ const BudgetSettings = () => {
       ) : hasBudget ? (
         <>
           <p className="budget-settings-amount">
-            €{summary.expenses.toFixed(2)} <span>/ €{summary.budget.toFixed(2)}</span>
+            {formatMoney(summary.expenses, currency)} <span>/ {formatMoney(summary.budget, currency)}</span>
           </p>
           <div className="budget-progress">
             <div

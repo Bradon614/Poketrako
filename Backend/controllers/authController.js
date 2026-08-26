@@ -6,6 +6,7 @@ const { sendError } = require("../utils/errors");
 
 const prisma = new PrismaClient();
 const MIN_PASSWORD_LENGTH = 8;
+const SUPPORTED_CURRENCIES = ["MGA", "EUR", "USD", "GBP"];
 
 async function signup(req, res) {
   try {
@@ -66,7 +67,7 @@ async function getMe(req, res) {
     const userId = req.user.id;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
-    res.json({ email: user.email, id: user.id, budget: Number(user.budget || 0) });
+    res.json({ email: user.email, id: user.id, budget: Number(user.budget || 0), currency: user.currency });
   } catch (err) {
     sendError(res, err);
   }
@@ -89,4 +90,21 @@ async function updateBudget(req, res) {
   }
 }
 
-module.exports = { signup, login, getMe, updateBudget };
+async function updateCurrency(req, res) {
+  try {
+    const { currency } = req.body;
+    if (!SUPPORTED_CURRENCIES.includes(currency)) {
+      return res.status(400).json({ message: `La devise doit être l'une de : ${SUPPORTED_CURRENCIES.join(", ")}` });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { currency }
+    });
+    res.json({ currency: user.currency });
+  } catch (err) {
+    sendError(res, err);
+  }
+}
+
+module.exports = { signup, login, getMe, updateBudget, updateCurrency, SUPPORTED_CURRENCIES };

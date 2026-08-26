@@ -21,14 +21,16 @@
   margin: 0;
 }
 
-.tables-section {
+.tables-section,
+.settings-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-md);
 }
 
 @media screen and (max-width: 900px) {
-  .tables-section {
+  .tables-section,
+  .settings-row {
     grid-template-columns: 1fr;
   }
 }

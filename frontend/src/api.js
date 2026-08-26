@@ -141,6 +141,10 @@ export function updateBudget(budget) {
   return request("/auth/budget", { method: "PUT", body: { budget } });
 }
 
+export function updateCurrency(currency) {
+  return request("/auth/currency", { method: "PUT", body: { currency } });
+}
+
 // ---------------------------------------------------------------------------
 // Receipts
 // ---------------------------------------------------------------------------

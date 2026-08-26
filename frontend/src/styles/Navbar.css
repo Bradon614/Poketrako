@@ -7,14 +7,18 @@
   align-items: center;
   height: var(--navbar-height);
   padding: 0 var(--space-lg);
-  background: var(--color-surface);
+  background: rgba(10, 10, 18, 0.75);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
 }
 
 .navbar-left h1 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   margin: 0;
-  color: var(--color-text);
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .navbar-right {

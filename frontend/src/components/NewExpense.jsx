@@ -87,7 +87,7 @@ const NewExpense = () => {
         step="0.01"
         min="0.01"
         name="amount"
-        placeholder="Montant (€)"
+        placeholder="Montant"
         value={form.amount}
         onChange={handleChange}
         required

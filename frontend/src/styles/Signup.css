@@ -11,7 +11,7 @@
   border: 1px solid var(--color-border);
   padding: 2rem;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), var(--glow-accent);
   text-align: center;
   width: 100%;
   max-width: 340px;
@@ -33,7 +33,7 @@
 }
 
 .signup-container p a {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-decoration: none;
   font-weight: 600;
 }

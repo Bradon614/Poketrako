@@ -1,6 +1,7 @@
 import AppLayout from '../components/AppLayout';
 import SummaryCards from '../components/SummaryCards';
 import BudgetSettings from '../components/BudgetSettings';
+import CurrencySettings from '../components/CurrencySettings';
 import CashFlowChart from '../components/CashFlowChart';
 import ExpenseTable from '../components/ExpenseTable';
 import IncomeTable from '../components/IncomeTable';
@@ -11,7 +12,10 @@ const Dashboard = () => (
     <BudgetAlert />
     <h2>Mon tableau de bord</h2>
     <SummaryCards />
-    <BudgetSettings />
+    <div className="settings-row">
+      <BudgetSettings />
+      <CurrencySettings />
+    </div>
     <CashFlowChart />
     <div className="tables-section">
       <ExpenseTable />

@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { isValidDateString } = require('../utils/validation');
 const { sendError } = require('../utils/errors');
+const { formatMoney } = require('../utils/currency');
 
 const prisma = new PrismaClient();
 
@@ -26,12 +27,13 @@ exports.getMonthlySummary = async (req, res) => {
                 _sum: { amount: true },
                 where: { userId: req.user.id, date: { gte: startDate, lte: endDate } },
             }),
-            prisma.user.findUnique({ where: { id: req.user.id }, select: { budget: true } }),
+            prisma.user.findUnique({ where: { id: req.user.id }, select: { budget: true, currency: true } }),
         ]);
 
         const income = Number(result[0]._sum.amount || 0);
         const expenses = Number(result[1]._sum.amount || 0);
         const budget = Number(result[2]?.budget || 0);
+        const currency = result[2]?.currency || 'MGA';
 
         res.json({
             month: `${year}-${String(monthIndex + 1).padStart(2, '0')}`,
@@ -96,12 +98,13 @@ exports.getAlerts = async (req, res) => {
                 _sum: { amount: true },
                 where: { userId: req.user.id, date: { gte: startDate, lte: endDate } },
             }),
-            prisma.user.findUnique({ where: { id: req.user.id }, select: { budget: true } }),
+            prisma.user.findUnique({ where: { id: req.user.id }, select: { budget: true, currency: true } }),
         ]);
 
         const income = Number(result[0]._sum.amount || 0);
         const expenses = Number(result[1]._sum.amount || 0);
         const budget = Number(result[2]?.budget || 0);
+        const currency = result[2]?.currency || 'MGA';
 
         // A user-defined budget is a more direct signal of intent than income,
         // so it takes priority when set. Falls back to the income comparison
@@ -110,7 +113,7 @@ exports.getAlerts = async (req, res) => {
             if (expenses > budget) {
                 res.json({
                     alert: true,
-                    message: `Vous avez dépassé votre budget de ce mois de ${(expenses - budget).toFixed(2)}€`,
+                    message: `Vous avez dépassé votre budget de ce mois de ${formatMoney(expenses - budget, currency)}`,
                 });
             } else {
                 res.json({ alert: false, message: 'Vous êtes dans votre budget ce mois-ci.' });
@@ -121,7 +124,7 @@ exports.getAlerts = async (req, res) => {
         if (expenses > income) {
             res.json({
                 alert: true,
-                message: `Vous avez dépassé votre revenu de ce mois de ${(expenses - income).toFixed(2)}€`,
+                message: `Vous avez dépassé votre revenu de ce mois de ${formatMoney(expenses - income, currency)}`,
             });
         } else {
             res.json({ alert: false, message: 'Vos finances sont équilibrées ce mois-ci.' });

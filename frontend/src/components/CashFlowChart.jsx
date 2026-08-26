@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
 import { getIncomes, getExpenses } from '../api';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatMoney } from '../currency';
 import '../styles/CashFlowChart.css';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -9,20 +11,21 @@ ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 // Canvas rendering can't resolve CSS custom properties, so the chart series
 // colors are literal values kept in sync with --color-chart-income/expense
 // in styles/theme.css.
-const COLOR_INCOME = 'rgba(22, 163, 74, 0.75)';
-const COLOR_EXPENSE = 'rgba(220, 38, 38, 0.75)';
-const COLOR_TEXT_MUTED = '#6b7280';
-const COLOR_GRID = '#e5e7eb';
+const COLOR_INCOME = 'rgba(52, 211, 153, 0.8)';
+const COLOR_EXPENSE = 'rgba(248, 113, 113, 0.8)';
+const COLOR_TEXT_MUTED = '#9797b3';
+const COLOR_GRID = 'rgba(255, 255, 255, 0.08)';
 
 const emptyChartData = {
   labels: [],
   datasets: [
-    { label: 'Entrées (€)', data: [], backgroundColor: COLOR_INCOME },
-    { label: 'Sorties (€)', data: [], backgroundColor: COLOR_EXPENSE },
+    { label: 'Entrées', data: [], backgroundColor: COLOR_INCOME },
+    { label: 'Sorties', data: [], backgroundColor: COLOR_EXPENSE },
   ],
 };
 
 const CashFlowChart = () => {
+  const { currency } = useCurrency();
   const [chartData, setChartData] = useState(emptyChartData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -60,8 +63,8 @@ const CashFlowChart = () => {
         setChartData({
           labels,
           datasets: [
-            { label: 'Entrées (€)', data: labels.map(m => monthlyData[m].income), backgroundColor: COLOR_INCOME },
-            { label: 'Sorties (€)', data: labels.map(m => monthlyData[m].expense), backgroundColor: COLOR_EXPENSE },
+            { label: 'Entrées', data: labels.map(m => monthlyData[m].income), backgroundColor: COLOR_INCOME },
+            { label: 'Sorties', data: labels.map(m => monthlyData[m].expense), backgroundColor: COLOR_EXPENSE },
           ],
         });
       } catch (err) {
@@ -77,7 +80,13 @@ const CashFlowChart = () => {
     responsive: true,
     plugins: {
       legend: { position: 'top', labels: { color: COLOR_TEXT_MUTED } },
-      tooltip: { mode: 'index', intersect: false },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: ${formatMoney(ctx.parsed.y, currency)}`
+        }
+      },
     },
     scales: {
       x: { ticks: { color: COLOR_TEXT_MUTED }, grid: { color: COLOR_GRID } },

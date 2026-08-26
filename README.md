@@ -42,7 +42,7 @@ Poketrako/
 | Auth     | JSON Web Tokens (`jsonwebtoken`), `bcrypt` password hashing |
 | Security | `helmet` (HTTP security headers), `express-rate-limit` (auth brute-force protection), origin-restricted CORS |
 | Frontend | React 19, Vite 7, React Router 7, Chart.js via `react-chartjs-2` |
-| Styling  | Plain CSS, light minimal design system (`src/styles/theme.css`) — flat, single-accent, no gradients |
+| Styling  | Plain CSS, dark futuristic design system (`src/styles/theme.css`) — near-black surfaces, violet/indigo gradient accents, glow shadows, motion |
 
 ## Prerequisites
 
@@ -193,6 +193,7 @@ All endpoints are prefixed with `/api`. Authenticated requests use
 | `POST`   | `/auth/login`          | no   | Returns a JWT valid for 24h |
 | `GET`    | `/auth/me`             | yes  | Current user (includes `budget`) |
 | `PUT`    | `/auth/budget`         | yes  | Set the monthly budget |
+| `PUT`    | `/auth/currency`       | yes  | Set the display currency (`MGA`, `EUR`, `USD`, `GBP`) |
 | `GET`    | `/expenses`            | yes  | List expenses (`start`, `end`, `categoryId`, `type`, `_sort`, `_limit`) |
 | `GET`    | `/expenses/:id`        | yes  | Get one expense |
 | `POST`   | `/expenses`            | yes  | Create an expense |
@@ -254,9 +255,13 @@ must be at least 8 characters.
   months (e.g. Jan 31 -> Feb 28/29)
 - Receipt upload on one-time expenses (JPEG/PNG/GIF/PDF, 1MB max): view,
   replace or delete from the expense table
+- Per-user currency preference (Ariary by default, or EUR/USD/GBP), saved in
+  the database and applied everywhere an amount is shown — including
+  server-generated alert messages, not just the frontend
+- Custom SVG logo, dark futuristic UI with gradient/glow accents and motion
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
-- 50 backend tests (Vitest + Supertest) against a real test database
+- 52 backend tests (Vitest + Supertest) against a real test database
 
 **Not working yet**
 
