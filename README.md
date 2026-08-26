@@ -142,6 +142,45 @@ npm run lint      # ESLint
 npm run preview   # serve the production build locally
 ```
 
+## Testing
+
+Backend tests use Vitest + Supertest against a real, separate PostgreSQL
+database — no mocking of Prisma. This catches real constraint/cascade
+behavior that mocks would silently miss.
+
+One-time setup:
+
+```bash
+createdb poketrako_test
+cd Backend
+cp .env.test.example .env.test
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/poketrako_test?schema=public" npx prisma migrate deploy
+```
+
+Run the suite:
+
+```bash
+cd Backend
+npm test          # single run
+npm run test:watch # watch mode
+```
+
+Each test file clears the database (and the `uploads/` folder) before every
+test via `beforeEach` — tests don't depend on execution order. The suite
+refuses to run if `DATABASE_URL` doesn't point at `poketrako_test`, as a
+guard against accidentally wiping a real database. Auth rate limiting is
+disabled when `NODE_ENV=test` (set automatically by `npm test`) so that
+tests creating many users in quick succession don't trip it; the limiter
+itself was verified manually (see Phase 4 in the project history).
+
+Covered: signup/login validation, JWT auth on every protected route,
+per-user data isolation, category/expense/income CRUD, recurring expense
+occurrence generation (including day-of-month clamping), monthly summary
+aggregation, budget-vs-income alert priority, and the full receipt
+upload/replace/delete lifecycle including in the filesystem.
+
+Not yet covered: frontend component tests, end-to-end tests.
+
 ## API
 
 All endpoints are prefixed with `/api`. Authenticated requests use
@@ -217,6 +256,7 @@ must be at least 8 characters.
   replace or delete from the expense table
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
+- 50 backend tests (Vitest + Supertest) against a real test database
 
 **Not working yet**
 
@@ -229,7 +269,8 @@ must be at least 8 characters.
 - Receipts can only be attached to one-time expenses, not recurring ones
   (a recurring expense creates many rows at once — there's no single
   occurrence to attach a file to at creation time)
-- There are no automated tests
+- No frontend tests (component or end-to-end) yet — only the backend has
+  automated coverage, see [Testing](#testing)
 
 **Known limitations**
 
@@ -252,7 +293,8 @@ must be at least 8 characters.
 6. ~~Phase 6 — UI/UX redesign: shared design tokens, responsive layout, empty/loading/error states~~ (done)
 7. ~~Phase 7 — Remaining features~~ (done): income creation form, budgets,
    recurring transactions, receipt upload
-8. Phase 8 — Testing
+8. Phase 8 — Testing: ~~backend (Vitest + Supertest, real test database)~~ (done);
+   frontend component/e2e tests still to do
 9. Phase 9 — Deployment
 10. Phase 10 — Mobile application (React Native / Expo)
 
