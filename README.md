@@ -152,7 +152,8 @@ All endpoints are prefixed with `/api`. Authenticated requests use
 | `GET`    | `/health`              | no   | Liveness check |
 | `POST`   | `/auth/signup`         | no   | Create a user |
 | `POST`   | `/auth/login`          | no   | Returns a JWT valid for 24h |
-| `GET`    | `/auth/me`             | yes  | Current user |
+| `GET`    | `/auth/me`             | yes  | Current user (includes `budget`) |
+| `PUT`    | `/auth/budget`         | yes  | Set the monthly budget |
 | `GET`    | `/expenses`            | yes  | List expenses (`start`, `end`, `categoryId`, `type`, `_sort`, `_limit`) |
 | `GET`    | `/expenses/:id`        | yes  | Get one expense |
 | `POST`   | `/expenses`            | yes  | Create an expense |
@@ -167,7 +168,7 @@ All endpoints are prefixed with `/api`. Authenticated requests use
 | `POST`   | `/categories`          | yes  | Create a category |
 | `PUT`    | `/categories/:id`      | yes  | Update a category |
 | `DELETE` | `/categories/:id`      | yes  | Delete a category (blocked if in use) |
-| `GET`    | `/summary/monthly`     | yes  | Income/expenses/balance for a given month |
+| `GET`    | `/summary/monthly`     | yes  | Income/expenses/balance/budget for a given month |
 | `GET`    | `/summary`             | yes  | Income/expenses/balance for a date range (`start`, `end`) |
 | `GET`    | `/summary/alerts`      | yes  | Whether expenses exceed income this month |
 
@@ -205,6 +206,8 @@ must be at least 8 characters.
 - Responsive layout (desktop/tablet/mobile) verified in the browser
 - Empty, loading and error states on every data-driven view
 - Full expense and income creation forms, reachable from their respective pages
+- Monthly budget: set from the dashboard, shown as a progress bar, and used by
+  the budget alert (falls back to the income comparison when no budget is set)
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
 
@@ -241,9 +244,9 @@ must be at least 8 characters.
 6. ~~Phase 6 — UI/UX redesign: shared design tokens, responsive layout, empty/loading/error states~~ (done)
 7. Phase 7 — Remaining features, tackled incrementally:
    - ~~Income creation form~~ (done)
+   - ~~Budgets: set/read `User.budget`, dashboard progress bar, budget-aware alert~~ (done)
    - Receipts (needs multer wired to a route + a file field in the expense form)
    - Recurring transactions (needs a job/scheduler to generate occurrences)
-   - Budgets (needs a UI to set/read `User.budget` and surface it on the dashboard)
 8. Phase 8 — Testing
 9. Phase 9 — Deployment
 10. Phase 10 — Mobile application (React Native / Expo)

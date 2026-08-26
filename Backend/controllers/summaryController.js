@@ -26,16 +26,19 @@ exports.getMonthlySummary = async (req, res) => {
                 _sum: { amount: true },
                 where: { userId: req.user.id, date: { gte: startDate, lte: endDate } },
             }),
+            prisma.user.findUnique({ where: { id: req.user.id }, select: { budget: true } }),
         ]);
 
         const income = Number(result[0]._sum.amount || 0);
         const expenses = Number(result[1]._sum.amount || 0);
+        const budget = Number(result[2]?.budget || 0);
 
         res.json({
             month: `${year}-${String(monthIndex + 1).padStart(2, '0')}`,
             income,
             expenses,
             balance: income - expenses,
+            budget,
         });
     } catch (error) {
         sendError(res, error);
@@ -93,10 +96,27 @@ exports.getAlerts = async (req, res) => {
                 _sum: { amount: true },
                 where: { userId: req.user.id, date: { gte: startDate, lte: endDate } },
             }),
+            prisma.user.findUnique({ where: { id: req.user.id }, select: { budget: true } }),
         ]);
 
         const income = Number(result[0]._sum.amount || 0);
         const expenses = Number(result[1]._sum.amount || 0);
+        const budget = Number(result[2]?.budget || 0);
+
+        // A user-defined budget is a more direct signal of intent than income,
+        // so it takes priority when set. Falls back to the income comparison
+        // otherwise (a user who hasn't set a budget yet still gets a signal).
+        if (budget > 0) {
+            if (expenses > budget) {
+                res.json({
+                    alert: true,
+                    message: `Vous avez dépassé votre budget de ce mois de ${(expenses - budget).toFixed(2)}€`,
+                });
+            } else {
+                res.json({ alert: false, message: 'Vous êtes dans votre budget ce mois-ci.' });
+            }
+            return;
+        }
 
         if (expenses > income) {
             res.json({

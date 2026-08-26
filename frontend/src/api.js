@@ -135,4 +135,8 @@ export function getBudgetAlert() {
   return request("/summary/alerts");
 }
 
+export function updateBudget(budget) {
+  return request("/auth/budget", { method: "PUT", body: { budget } });
+}
+
 export { API_URL, authHeaders };

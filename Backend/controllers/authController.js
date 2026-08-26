@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { isValidEmail, isNonEmptyString } = require("../utils/validation");
+const { isValidEmail, isNonEmptyString, isNonNegativeNumber } = require("../utils/validation");
 const { sendError } = require("../utils/errors");
 
 const prisma = new PrismaClient();
@@ -66,10 +66,27 @@ async function getMe(req, res) {
     const userId = req.user.id;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
-    res.json({ email: user.email, id: user.id });
+    res.json({ email: user.email, id: user.id, budget: Number(user.budget || 0) });
   } catch (err) {
     sendError(res, err);
   }
 }
 
-module.exports = { signup, login, getMe };
+async function updateBudget(req, res) {
+  try {
+    const { budget } = req.body;
+    if (!isNonNegativeNumber(budget)) {
+      return res.status(400).json({ message: "Le budget doit être un nombre positif ou nul" });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { budget }
+    });
+    res.json({ budget: Number(user.budget || 0) });
+  } catch (err) {
+    sendError(res, err);
+  }
+}
+
+module.exports = { signup, login, getMe, updateBudget };

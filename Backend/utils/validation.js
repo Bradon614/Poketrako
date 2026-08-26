@@ -12,6 +12,12 @@ function isPositiveNumber(value) {
   return !Number.isNaN(n) && n > 0;
 }
 
+function isNonNegativeNumber(value) {
+  if (typeof value === 'boolean' || value === null || value === '') return false;
+  const n = Number(value);
+  return !Number.isNaN(n) && n >= 0;
+}
+
 function isPositiveInteger(value) {
   if (typeof value === 'boolean' || value === null || value === '') return false;
   const n = Number(value);
@@ -28,6 +34,7 @@ module.exports = {
   isNonEmptyString,
   isValidEmail,
   isPositiveNumber,
+  isNonNegativeNumber,
   isPositiveInteger,
   isValidDateString
 };
