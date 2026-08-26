@@ -1,5 +1,7 @@
 // Base URL of the Express API. Configure via frontend/.env (see .env.example).
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Uploaded files are served from the backend origin directly (no /api prefix).
+const UPLOADS_BASE_URL = API_URL.replace(/\/api\/?$/, "");
 
 function authHeaders() {
   const token = localStorage.getItem("token");
@@ -137,6 +139,38 @@ export function getBudgetAlert() {
 
 export function updateBudget(budget) {
   return request("/auth/budget", { method: "PUT", body: { budget } });
+}
+
+// ---------------------------------------------------------------------------
+// Receipts
+// ---------------------------------------------------------------------------
+
+export function receiptUrl(receipt) {
+  return `${UPLOADS_BASE_URL}${receipt.url}`;
+}
+
+export async function uploadReceipt(expenseId, file) {
+  const formData = new FormData();
+  formData.append("receipt", file);
+
+  const res = await fetch(`${API_URL}/expenses/${expenseId}/receipt`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData
+  });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    throw new Error(data?.message || `Requête échouée (${res.status})`);
+  }
+
+  return data;
+}
+
+export function deleteReceipt(expenseId) {
+  return request(`/expenses/${expenseId}/receipt`, { method: "DELETE" });
 }
 
 export { API_URL, authHeaders };

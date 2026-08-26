@@ -20,3 +20,20 @@
   font-size: 0.85rem;
   text-transform: uppercase;
 }
+
+.receipt-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.receipt-cell a {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-accent);
+}
+
+.receipt-cell a svg {
+  width: 16px;
+  height: 16px;
+}

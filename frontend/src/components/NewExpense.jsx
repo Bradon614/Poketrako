@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createExpense, getCategories } from '../api';
+import { createExpense, getCategories, uploadReceipt } from '../api';
 import '../styles/EntityForm.css';
 
 const EXPENSE_TYPES = [
@@ -20,6 +20,7 @@ const NewExpense = () => {
     startDate: '',
     endDate: ''
   });
+  const [receipt, setReceipt] = useState(null);
   const [error, setError] = useState('');
   const [categoriesError, setCategoriesError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -35,13 +36,17 @@ const NewExpense = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    setReceipt(e.target.files[0] || null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSubmitting(true);
 
     try {
-      await createExpense({
+      const created = await createExpense({
         amount: form.amount,
         date: form.date || undefined,
         categoryId: form.categoryId || undefined,
@@ -50,6 +55,18 @@ const NewExpense = () => {
         startDate: form.type === 'RECURRING' ? form.startDate || undefined : undefined,
         endDate: form.type === 'RECURRING' ? form.endDate || undefined : undefined
       });
+
+      if (receipt && form.type === 'ONE_TIME') {
+        try {
+          await uploadReceipt(created.id, receipt);
+        } catch (uploadErr) {
+          // The expense itself was created successfully — only the receipt
+          // upload failed, so surface that separately instead of losing it
+          // silently (navigation already needs to happen either way).
+          window.alert(`Dépense enregistrée, mais le justificatif n'a pas pu être envoyé : ${uploadErr.message}`);
+        }
+      }
+
       navigate('/expenses');
     } catch (err) {
       setError(err.message || 'Erreur lors de la création de la dépense');
@@ -76,7 +93,16 @@ const NewExpense = () => {
         required
       />
       {form.type === 'ONE_TIME' && (
-        <input className="field" type="date" name="date" value={form.date} onChange={handleChange} />
+        <>
+          <input className="field" type="date" name="date" value={form.date} onChange={handleChange} />
+          <label>Justificatif (optionnel — JPEG, PNG, GIF ou PDF, 1 Mo max)</label>
+          <input
+            className="field"
+            type="file"
+            accept=".jpg,.jpeg,.png,.gif,.pdf"
+            onChange={handleFileChange}
+          />
+        </>
       )}
 
       <select className="field" name="categoryId" value={form.categoryId} onChange={handleChange}>

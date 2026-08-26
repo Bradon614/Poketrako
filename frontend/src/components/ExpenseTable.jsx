@@ -1,23 +1,33 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LuPlus } from 'react-icons/lu';
-import { getExpenses } from '../api';
+import { LuPlus, LuPaperclip, LuTrash2 } from 'react-icons/lu';
+import { getExpenses, deleteReceipt, receiptUrl } from '../api';
 import '../styles/ExpenseTable.css';
 
 const ExpenseTable = () => {
   const [expenses, setExpenses] = useState(null);
   const [error, setError] = useState('');
 
+  const fetchExpenses = async () => {
+    try {
+      setExpenses(await getExpenses({ _sort: 'date:DESC', _limit: 5 }));
+    } catch (err) {
+      setError(err.message || 'Erreur de récupération des dépenses');
+    }
+  };
+
   useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        setExpenses(await getExpenses({ _sort: 'date:DESC', _limit: 5 }));
-      } catch (err) {
-        setError(err.message || 'Erreur de récupération des dépenses');
-      }
-    };
     fetchExpenses();
   }, []);
+
+  const handleDeleteReceipt = async (expenseId) => {
+    try {
+      await deleteReceipt(expenseId);
+      fetchExpenses();
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la suppression du justificatif');
+    }
+  };
 
   return (
     <div className="expense-table-container card">
@@ -39,6 +49,7 @@ const ExpenseTable = () => {
               <th>Date</th>
               <th>Description</th>
               <th>Montant (€)</th>
+              <th>Justificatif</th>
             </tr>
           </thead>
           <tbody>
@@ -47,6 +58,27 @@ const ExpenseTable = () => {
                 <td>{exp.date ? new Date(exp.date).toLocaleDateString() : '—'}</td>
                 <td>{exp.description || '—'}</td>
                 <td>{Number(exp.amount).toFixed(2)}</td>
+                <td>
+                  {exp.receiptUpload ? (
+                    <span className="receipt-cell">
+                      <a
+                        href={receiptUrl(exp.receiptUpload)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Voir le justificatif"
+                      >
+                        <LuPaperclip />
+                      </a>
+                      <button
+                        className="icon-btn"
+                        onClick={() => handleDeleteReceipt(exp.id)}
+                        aria-label="Supprimer le justificatif"
+                      >
+                        <LuTrash2 />
+                      </button>
+                    </span>
+                  ) : '—'}
+                </td>
               </tr>
             ))}
           </tbody>

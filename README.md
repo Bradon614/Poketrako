@@ -159,6 +159,8 @@ All endpoints are prefixed with `/api`. Authenticated requests use
 | `POST`   | `/expenses`            | yes  | Create an expense |
 | `PUT`    | `/expenses/:id`        | yes  | Update an expense |
 | `DELETE` | `/expenses/:id`        | yes  | Delete an expense |
+| `POST`   | `/expenses/:id/receipt`| yes  | Upload/replace a receipt (multipart, field `receipt`) |
+| `DELETE` | `/expenses/:id/receipt`| yes  | Delete a receipt |
 | `GET`    | `/incomes`             | yes  | List incomes |
 | `GET`    | `/incomes/:id`         | yes  | Get one income |
 | `POST`   | `/incomes`             | yes  | Create an income |
@@ -211,18 +213,22 @@ must be at least 8 characters.
 - Recurring expenses: creating one with a start date (and optional end date)
   generates one real row per month, clamped to the last valid day of shorter
   months (e.g. Jan 31 -> Feb 28/29)
+- Receipt upload on one-time expenses (JPEG/PNG/GIF/PDF, 1MB max): view,
+  replace or delete from the expense table
 - Prisma schema and migrations
 - Frontend builds and lints cleanly
 
 **Not working yet**
 
-- Receipt upload middleware (`multer`) exists but is not connected to any
-  route — the expense form has no file field yet
-- No editing or deletion from the UI for expenses/incomes (creation and
-  listing only); category editing/deletion exists but with no confirmation step
+- No editing or deletion from the UI for expenses/incomes themselves
+  (creation and listing only); category editing/deletion exists but with no
+  confirmation step
 - Recurring expenses are generated once at creation time, capped at 60
   occurrences; a series isn't linked as a group afterward, so editing/deleting
   only ever affects one occurrence at a time, not the whole series
+- Receipts can only be attached to one-time expenses, not recurring ones
+  (a recurring expense creates many rows at once — there's no single
+  occurrence to attach a file to at creation time)
 - There are no automated tests
 
 **Known limitations**
@@ -244,11 +250,8 @@ must be at least 8 characters.
 4. ~~Phase 4 — Security hardening: helmet, CORS restriction, auth rate limiting~~ (done)
 5. ~~Phase 5 — Frontend foundation: real API client usage everywhere, auth guard, working forms~~ (done)
 6. ~~Phase 6 — UI/UX redesign: shared design tokens, responsive layout, empty/loading/error states~~ (done)
-7. Phase 7 — Remaining features, tackled incrementally:
-   - ~~Income creation form~~ (done)
-   - ~~Budgets: set/read `User.budget`, dashboard progress bar, budget-aware alert~~ (done)
-   - ~~Recurring transactions: generate real monthly occurrences at creation time~~ (done)
-   - Receipts (needs multer wired to a route + a file field in the expense form)
+7. ~~Phase 7 — Remaining features~~ (done): income creation form, budgets,
+   recurring transactions, receipt upload
 8. Phase 8 — Testing
 9. Phase 9 — Deployment
 10. Phase 10 — Mobile application (React Native / Expo)

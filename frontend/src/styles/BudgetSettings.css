@@ -13,28 +13,6 @@
   margin: 0;
 }
 
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: var(--space-xs);
-  border-radius: var(--radius-sm);
-}
-
-.icon-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.icon-btn:hover:not(:disabled) {
-  background: var(--color-surface-alt);
-  color: var(--color-text);
-}
-
 .budget-settings-form {
   display: flex;
   align-items: center;

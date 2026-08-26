@@ -75,7 +75,7 @@ exports.getExpenses = async (req, res) => {
     if (categoryId) where.categoryId = parseInt(categoryId, 10);
     if (type) where.type = type;
 
-    const options = { where, include: { category: true } };
+    const options = { where, include: { category: true, receiptUpload: true } };
     if (_limit) options.take = parseInt(_limit, 10);
     if (_sort) {
       const [field, order] = _sort.split(':');
