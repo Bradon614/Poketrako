@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors, spacing, typography } from './design';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing } from './design';
+import { AppText } from './Text';
 import { Button } from './Button';
 
 interface ErrorStateProps {
@@ -21,7 +23,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   return (
     <View style={[styles.container, style]}>
       <View style={styles.iconContainer}>
-        <IconError color={colors.error} size={48} />
+        <Ionicons name="alert-circle" color={colors.error} size={48} />
       </View>
       <AppText style={styles.title} variant="h4" color={colors.text} center>
         {title}
@@ -41,16 +43,6 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
     </View>
   );
 };
-
-import { AppText } from './Text';
-
-const IconError: React.FC<{ color: string; size: number }> = ({ color, size }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="15" y1="9" x2="9" y2="15" />
-    <line x1="9" y1="9" x2="15" y2="15" />
-  </svg>
-);
 
 const styles = StyleSheet.create({
   container: {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -14,6 +14,7 @@ import {
   spacing,
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
+import { showError } from '@/utils/notify';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -53,7 +54,7 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       }
     } catch (error: any) {
-      Alert.alert('Erreur de connexion', error.message || 'Identifiants incorrects');
+      showError(error.message || 'Identifiants incorrects', 'Erreur de connexion');
     } finally {
       setLoading(false);
     }
@@ -70,7 +71,7 @@ export default function LoginScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
@@ -139,9 +140,8 @@ export default function LoginScreen() {
   );
 }
 
-import { View } from 'react-native';
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -194,4 +194,4 @@ const styles = {
     marginTop: spacing.lg,
     gap: spacing.sm,
   },
-};
+});

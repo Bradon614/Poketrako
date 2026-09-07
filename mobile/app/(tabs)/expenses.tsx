@@ -1,83 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Alert, Platform, View, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { useExpenses } from '@/hooks/useExpenses';
+import { useAuth } from '@/hooks/useAuth';
 import { useCategories } from '@/hooks/useCategories';
-import { Expense, CreateExpenseRequest, UpdateExpenseRequest, ExpenseType } from '@/types/api';
+import { Expense, CreateExpenseRequest, UpdateExpenseRequest } from '@/types/api';
+import { ExpenseForm } from '@/components/forms/ExpenseForm';
 import {
   Screen,
-  Card,
   Button,
-  Input,
+  IconButton,
   Heading,
   AppText,
   EmptyState,
+  ErrorState,
   LoadingState,
-  IconButton,
   RefreshableList,
   colors,
   spacing,
   borderRadius,
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { formatMoney, formatDate, toISODateString } from '@/utils';
+import { formatMoney, formatDate } from '@/utils';
+import { confirmDialog, showError } from '@/utils/notify';
 
 export default function ExpensesScreen() {
+  const { user } = useAuth();
+  const currency = user?.currency || 'MGA';
   const { expenses, loading, error, refetch, create, updateExpense, deleteExpense } = useExpenses({ _sort: 'date:desc' });
   const { categories } = useCategories();
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [formData, setFormData] = useState<CreateExpenseRequest>({
-    amount: 0,
-    date: toISODateString(new Date()),
-    categoryId: undefined,
-    description: '',
-    type: 'ONE_TIME',
-  });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof CreateExpenseRequest, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const resetForm = () => {
-    setFormData({
-      amount: 0,
-      date: toISODateString(new Date()),
-      categoryId: undefined,
-      description: '',
-      type: 'ONE_TIME',
-    });
-    setFormErrors({});
     setEditingExpense(null);
     setShowForm(false);
   };
 
-  const validateForm = () => {
-    const errors: Partial<Record<keyof CreateExpenseRequest, string>> = {};
-    if (!formData.amount || formData.amount <= 0) {
-      errors.amount = 'Le montant doit être positif';
-    }
-    if (!formData.date) {
-      errors.date = 'La date est requise';
-    }
-    if (formData.type === 'RECURRING' && !formData.startDate) {
-      errors.startDate = 'Date de début requise pour dépense récurrente';
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
+  const handleSubmit = async (payload: CreateExpenseRequest) => {
     setSubmitting(true);
     try {
       if (editingExpense) {
-        await updateExpense(editingExpense.id, formData as UpdateExpenseRequest);
+        await updateExpense(editingExpense.id, payload as UpdateExpenseRequest);
       } else {
-        await create(formData);
+        await create(payload);
       }
       resetForm();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de sauvegarder');
+      showError(err.message || 'Impossible de sauvegarder');
     } finally {
       setSubmitting(false);
     }
@@ -85,33 +56,48 @@ export default function ExpensesScreen() {
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
-    setFormData({
-      amount: parseFloat(expense.amount),
-      date: expense.date ? expense.date.split('T')[0] : toISODateString(new Date()),
-      categoryId: expense.categoryId,
-      description: expense.description || '',
-      type: expense.type,
-      startDate: expense.startDate ? expense.startDate.split('T')[0] : undefined,
-      endDate: expense.endDate ? expense.endDate.split('T')[0] : undefined,
-    });
     setShowForm(true);
   };
 
-  const handleDelete = (expense: Expense) => {
-    Alert.alert(
-      'Supprimer la dépense',
-      'Êtes-vous sûr de vouloir supprimer cette dépense ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: () => deleteExpense(expense.id) },
-      ]
-    );
+  const handleDelete = async (expense: Expense) => {
+    const confirmed = await confirmDialog({
+      title: 'Supprimer la dépense',
+      message: 'Êtes-vous sûr de vouloir supprimer cette dépense ?',
+      confirmLabel: 'Supprimer',
+      destructive: true,
+    });
+    if (!confirmed) return;
+    try {
+      await deleteExpense(expense.id);
+    } catch (err: any) {
+      showError(err.message || 'Impossible de supprimer');
+    }
   };
 
   const handleAddExpense = () => {
-    resetForm();
+    setEditingExpense(null);
     setShowForm(true);
   };
+
+  // Keep the list current when coming back from create/detail screens.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  // Pre-filled values for the shared form: undefined => blank defaults.
+  const formInitial: CreateExpenseRequest | undefined = editingExpense
+    ? {
+        amount: parseFloat(editingExpense.amount),
+        date: editingExpense.date ? editingExpense.date.split('T')[0] : undefined,
+        categoryId: editingExpense.categoryId,
+        description: editingExpense.description || '',
+        type: editingExpense.type,
+        startDate: editingExpense.startDate ? editingExpense.startDate.split('T')[0] : undefined,
+        endDate: editingExpense.endDate ? editingExpense.endDate.split('T')[0] : undefined,
+      }
+    : undefined;
 
   if (loading && expenses.length === 0) {
     return (
@@ -130,18 +116,18 @@ export default function ExpensesScreen() {
 
       {showForm && (
         <ExpenseForm
-          formData={formData}
-          formErrors={formErrors}
           categories={categories}
+          initial={formInitial}
           submitting={submitting}
           editing={!!editingExpense}
-          onChange={setFormData}
           onSubmit={handleSubmit}
           onCancel={resetForm}
         />
       )}
 
-      {expenses.length === 0 ? (
+      {error && expenses.length === 0 ? (
+        <ErrorState message={error} onRetry={() => refetch()} />
+      ) : expenses.length === 0 && !showForm ? (
         <EmptyState
           title="Aucune dépense"
           message="Commencez par ajouter votre première dépense"
@@ -158,6 +144,8 @@ export default function ExpensesScreen() {
             <ExpenseCard
               key={expense.id}
               expense={expense}
+              currency={currency}
+              onPress={() => router.push(`/expense/${expense.id}`)}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
@@ -168,200 +156,79 @@ export default function ExpensesScreen() {
   );
 }
 
-const ExpenseForm: React.FC<{
-  formData: CreateExpenseRequest;
-  formErrors: Partial<Record<keyof CreateExpenseRequest, string>>;
-  categories: { id: number; name: string }[];
-  submitting: boolean;
-  editing: boolean;
-  onChange: (data: CreateExpenseRequest) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-}> = ({
-  formData,
-  formErrors,
-  categories,
-  submitting,
-  editing,
-  onChange,
-  onSubmit,
-  onCancel,
-}) => {
-  const updateField = <K extends keyof CreateExpenseRequest>(key: K, value: CreateExpenseRequest[K]) => {
-    onChange({ ...formData, [key]: value });
-  };
-
-  return (
-    <Card style={styles.formCard}>
-      <View style={styles.formHeader}>
-        <Heading level={3}>{editing ? 'Modifier la dépense' : 'Nouvelle dépense'}</Heading>
-        <IconButton
-          icon={<Ionicons name="close" size={24} color={colors.textSecondary} />}
-          onPress={onCancel}
-          size="sm"
-          variant="ghost"
-        />
-      </View>
-
-      <Input
-        label="Montant *"
-        value={String(formData.amount)}
-        onChangeText={(v) => updateField('amount', parseFloat(v) || 0)}
-        placeholder="0.00"
-        keyboardType="decimal-pad"
-        error={formErrors.amount}
-        style={styles.input}
-      />
-
-      <Input
-        label="Date *"
-        value={formData.date || ''}
-        onChangeText={(v) => updateField('date', v)}
-        placeholder="YYYY-MM-DD"
-        keyboardType="numeric"
-        error={formErrors.date}
-        style={styles.input}
-      />
-
-      <Input
-        label="Catégorie"
-        value={categories.find(c => c.id === formData.categoryId)?.name || ''}
-        onChangeText={() => {}}
-        placeholder="Sélectionner une catégorie"
-        editable={false}
-        style={styles.input}
-        rightIcon={
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        }
-      />
-
-      <Input
-        label="Description"
-        value={formData.description}
-        onChangeText={(v) => updateField('description', v)}
-        placeholder="Optionnel"
-        style={styles.input}
-      />
-
-      <View style={styles.typeSelector}>
-        <AppText variant="bodySmall" color={colors.textSecondary} style={styles.typeLabel}>
-          Type
-        </AppText>
-        <View style={styles.typeButtons}>
-          {(['ONE_TIME', 'RECURRING'] as ExpenseType[]).map((type) => (
-            <TouchableOpacity
-              key={type}
-              onPress={() => updateField('type', type)}
-              style={[
-                styles.typeButton,
-                formData.type === type && styles.typeButtonActive,
-              ]}
-            >
-              <AppText
-                variant="bodySmall"
-                color={formData.type === type ? colors.white : colors.textSecondary}
-              >
-                {type === 'ONE_TIME' ? 'Ponctuelle' : 'Récurrente'}
-              </AppText>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {formData.type === 'RECURRING' && (
-        <>
-          <Input
-            label="Date de début *"
-            value={formData.startDate || ''}
-            onChangeText={(v) => updateField('startDate', v)}
-            placeholder="YYYY-MM-DD"
-            keyboardType="numeric"
-            error={formErrors.startDate}
-            style={styles.input}
-          />
-          <Input
-            label="Date de fin (optionnel)"
-            value={formData.endDate || ''}
-            onChangeText={(v) => updateField('endDate', v)}
-            placeholder="YYYY-MM-DD"
-            keyboardType="numeric"
-            style={styles.input}
-          />
-        </>
-      )}
-
-      <View style={styles.formActions}>
-        <Button title="Annuler" onPress={onCancel} variant="secondary" fullWidth />
-        <Button
-          title={editing ? 'Modifier' : 'Créer'}
-          onPress={onSubmit}
-          fullWidth
-          loading={submitting}
-        />
-      </View>
-    </Card>
-  );
-};
-
 const ExpenseCard: React.FC<{
   expense: Expense;
+  currency: string;
+  onPress: () => void;
   onEdit: (expense: Expense) => void;
   onDelete: (expense: Expense) => void;
-}> = ({ expense, onEdit, onDelete }) => {
+}> = ({ expense, currency, onPress, onEdit, onDelete }) => {
   const amount = parseFloat(expense.amount);
   const isRecurring = expense.type === 'RECURRING';
 
   return (
-    <Card style={styles.expenseCard}>
-      <View style={styles.expenseHeader}>
-        <View style={styles.expenseMain}>
-          <AppText variant="body" color={colors.text} style={styles.expenseTitle}>
-            {expense.category?.name || expense.description || 'Sans catégorie'}
-          </AppText>
-          <View style={styles.expenseMeta}>
-            <AppText variant="caption" color={colors.textMuted}>
-              {formatDate(expense.date || expense.creationDate)}
+    <View style={styles.card}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        <View style={styles.expenseHeader}>
+          <View style={styles.expenseMain}>
+            <AppText variant="body" color={colors.text} style={styles.expenseTitle}>
+              {expense.category?.name || expense.description || 'Sans catégorie'}
             </AppText>
-            {isRecurring && (
-              <View style={styles.recurringBadge}>
-                <AppText variant="caption" color={colors.primary} style={styles.badgeText}>
-                  Récurrente
-                </AppText>
-              </View>
-            )}
+            <View style={styles.expenseMeta}>
+              <AppText variant="caption" color={colors.textMuted}>
+                {formatDate(expense.date || expense.creationDate)}
+              </AppText>
+              {isRecurring && (
+                <View style={styles.recurringBadge}>
+                  <AppText variant="caption" color={colors.primary} style={styles.badgeText}>
+                    Récurrente
+                  </AppText>
+                </View>
+              )}
+            </View>
+          </View>
+          <View style={styles.expenseActions}>
+            <AppText variant="h4" color={colors.error} style={styles.expenseAmount}>
+              -{formatMoney(amount, currency)}
+            </AppText>
           </View>
         </View>
-        <View style={styles.expenseActions}>
-          <AppText variant="h4" color={colors.error} style={styles.expenseAmount}>
-            -{formatMoney(amount, 'MGA')}
-          </AppText>
-          <IconButton
-            icon={<Ionicons name="create-outline" size={20} color={colors.textSecondary} />}
-            onPress={() => onEdit(expense)}
-            size="sm"
-            variant="ghost"
-            accessibilityLabel="Modifier"
-          />
-          <IconButton
-            icon={<Ionicons name="trash-outline" size={20} color={colors.error} />}
-            onPress={() => onDelete(expense)}
-            size="sm"
-            variant="ghost"
-            accessibilityLabel="Supprimer"
-          />
-        </View>
-      </View>
 
-      {expense.description && (
-        <AppText variant="caption" color={colors.textSecondary} style={styles.expenseDescription}>
-          {expense.description}
-        </AppText>
-      )}
-    </Card>
+        {expense.description && (
+          <AppText variant="caption" color={colors.textSecondary} style={styles.expenseDescription}>
+            {expense.description}
+          </AppText>
+        )}
+      </TouchableOpacity>
+
+      <View style={styles.cardActions}>
+        <Button
+          title="Détails"
+          onPress={onPress}
+          variant="secondary"
+          size="sm"
+          style={styles.cardButton}
+        />
+        <IconButton
+          icon={<Ionicons name="create-outline" size={20} color={colors.textSecondary} />}
+          onPress={() => onEdit(expense)}
+          size="sm"
+          variant="ghost"
+          accessibilityLabel="Modifier"
+        />
+        <IconButton
+          icon={<Ionicons name="trash-outline" size={20} color={colors.error} />}
+          onPress={() => onDelete(expense)}
+          size="sm"
+          variant="ghost"
+          accessibilityLabel="Supprimer"
+        />
+      </View>
+    </View>
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   header: {
     flexDirection: 'row' as const,
     justifyContent: 'space-between',
@@ -372,48 +239,12 @@ const styles = {
     paddingBottom: spacing.xl,
     gap: spacing.md,
   },
-  formCard: {
-    marginBottom: spacing.lg,
-  },
-  formHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  input: {
-    marginBottom: spacing.md,
-  },
-  typeSelector: {
-    marginBottom: spacing.md,
-  },
-  typeLabel: {
-    marginBottom: spacing.sm,
-  },
-  typeButtons: {
-    flexDirection: 'row' as const,
-    gap: spacing.sm,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center' as const,
-  },
-  typeButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  formActions: {
-    flexDirection: 'row' as const,
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  expenseCard: {
-    marginBottom: spacing.md,
+    padding: spacing.md,
   },
   expenseHeader: {
     flexDirection: 'row' as const,
@@ -440,16 +271,27 @@ const styles = {
   badgeText: {
     fontWeight: '600' as const,
   },
-  expenseAmount: {
-    marginBottom: spacing.sm,
-  },
   expenseActions: {
     flexDirection: 'row' as const,
     alignItems: 'center',
     gap: spacing.xs,
   },
+  expenseAmount: {
+    marginBottom: spacing.sm,
+  },
   expenseDescription: {
     marginTop: spacing.sm,
     fontStyle: 'italic' as const,
   },
-};
+  cardActions: {
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  cardButton: {},
+});

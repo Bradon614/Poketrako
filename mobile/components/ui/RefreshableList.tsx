@@ -23,6 +23,10 @@ export const RefreshableList: React.FC<RefreshableListProps> = ({
       }
       contentContainerStyle={contentContainerStyle}
       style={style}
+      // Taps on buttons inside the list register on first touch even while
+      // the keyboard is up (inline forms on the list screens).
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
       showsVerticalScrollIndicator={false}
     >
       {children}

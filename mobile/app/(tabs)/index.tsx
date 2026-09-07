@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, RefreshControl, View } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useMonthlySummary, useAlerts } from '@/hooks/useSummary';
 import { useExpenses } from '@/hooks/useExpenses';
@@ -19,16 +19,33 @@ import {
   borderRadius,
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { formatMoney, formatDate, getRelativeTime } from '@/utils';
+import { formatMoney, getRelativeTime } from '@/utils';
 import { Expense, Income } from '@/types/api';
+import { confirmDialog } from '@/utils/notify';
+
+type Transaction = { kind: 'expense'; data: Expense } | { kind: 'income'; data: Income };
+
+const DASHBOARD_LIST_SIZE = 5;
 
 export default function DashboardScreen() {
   const { user, logout } = useAuth();
-  const { summary, loading: summaryLoading, error: summaryError, refetch: refetchSummary } = useMonthlySummary();
-  const { alert, loading: alertLoading } = useAlerts();
-  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses({ _limit: 5, _sort: 'date:desc' });
-  const { incomes, loading: incomesLoading, refetch: refetchIncomes } = useIncomes({ _limit: 5, _sort: 'date:desc' });
+  const currency = user?.currency || 'MGA';
+  const { summary, loading: summaryLoading, refetch: refetchSummary } = useMonthlySummary();
+  const { alert } = useAlerts();
+  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses({ _limit: DASHBOARD_LIST_SIZE, _sort: 'date:desc' });
+  const { incomes, loading: incomesLoading, refetch: refetchIncomes } = useIncomes({ _limit: DASHBOARD_LIST_SIZE, _sort: 'date:desc' });
   const [refreshing, setRefreshing] = useState(false);
+
+  // Refresh when the dashboard regains focus (e.g. after creating an expense
+  // from the quick actions) so balances and recent transactions stay current.
+  useFocusEffect(
+    useCallback(() => {
+      refetchSummary();
+      refetchExpenses();
+      refetchIncomes();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -37,25 +54,28 @@ export default function DashboardScreen() {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Déconnexion', style: 'destructive', onPress: () => logout() },
-      ]
-    );
+    const confirmed = await confirmDialog({
+      title: 'Déconnexion',
+      message: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+      confirmLabel: 'Déconnexion',
+      destructive: true,
+    });
+    if (!confirmed) return;
+    await logout();
   };
 
   const handleViewAllExpenses = () => router.push('/(tabs)/expenses');
-  const handleViewAllIncomes = () => router.push('/(tabs)/incomes');
 
-  const recentTransactions = [
-    ...expenses.map(e => ({ ...e, type: 'expense' as const })),
-    ...incomes.map(i => ({ ...i, type: 'income' as const })),
+  const recentTransactions: Transaction[] = [
+    ...expenses.map((e): Transaction => ({ kind: 'expense', data: e })),
+    ...incomes.map((i): Transaction => ({ kind: 'income', data: i })),
   ]
-    .sort((a, b) => new Date(b.date || b.creationDate).getTime() - new Date(a.date || a.creationDate).getTime())
-    .slice(0, 5);
+    .sort((a, b) => {
+      const dateA = 'date' in a.data && a.data.date ? a.data.date : a.data.creationDate;
+      const dateB = 'date' in b.data && b.data.date ? b.data.date : b.data.creationDate;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    })
+    .slice(0, DASHBOARD_LIST_SIZE);
 
   const loading = summaryLoading || expensesLoading || incomesLoading;
 
@@ -110,20 +130,20 @@ export default function DashboardScreen() {
             <View style={styles.balanceCard}>
               <AppText variant="caption" color={colors.textSecondary}>Solde actuel</AppText>
               <Heading level={1} style={styles.balanceAmount}>
-                {formatMoney(summary.balance, user?.currency || 'MGA')}
+                {formatMoney(summary.balance, currency)}
               </Heading>
               <View style={styles.balanceDetails}>
                 <View style={styles.balanceItem}>
                   <AppText variant="caption" color={colors.success}>Revenus</AppText>
                   <AppText variant="body" color={colors.text}>
-                    {formatMoney(summary.income, user?.currency || 'MGA')}
+                    {formatMoney(summary.income, currency)}
                   </AppText>
                 </View>
                 <View style={styles.balanceDivider} />
                 <View style={styles.balanceItem}>
                   <AppText variant="caption" color={colors.error}>Dépenses</AppText>
                   <AppText variant="body" color={colors.text}>
-                    {formatMoney(summary.expenses, user?.currency || 'MGA')}
+                    {formatMoney(summary.expenses, currency)}
                   </AppText>
                 </View>
               </View>
@@ -131,7 +151,7 @@ export default function DashboardScreen() {
                 <View style={styles.budgetProgress}>
                   <View style={styles.budgetLabels}>
                     <AppText variant="caption" color={colors.textSecondary}>
-                      Budget: {formatMoney(summary.budget, user?.currency || 'MGA')}
+                      Budget: {formatMoney(summary.budget, currency)}
                     </AppText>
                     <AppText variant="caption" color={colors.textSecondary}>
                       {Math.min(Math.round((summary.expenses / summary.budget) * 100), 100)}%
@@ -170,9 +190,9 @@ export default function DashboardScreen() {
             <View style={styles.transactionList}>
               {recentTransactions.map((tx) => (
                 <TransactionItem
-                  key={tx.id}
+                  key={`${tx.kind}-${tx.data.id}`}
                   transaction={tx}
-                  currency={user?.currency || 'MGA'}
+                  currency={currency}
                 />
               ))}
             </View>
@@ -210,20 +230,23 @@ export default function DashboardScreen() {
 }
 
 const TransactionItem: React.FC<{
-  transaction: (Expense | Income) & { type: 'expense' | 'income' };
+  transaction: Transaction;
   currency: string;
 }> = ({ transaction, currency }) => {
-  const isExpense = transaction.type === 'expense';
-  const amount = parseFloat(transaction.amount);
-  const date = transaction.date || transaction.creationDate;
-  const categoryName = 'category' in transaction && transaction.category
-    ? transaction.category.name
-    : 'source' in transaction
-    ? transaction.source
-    : 'Sans catégorie';
+  const isExpense = transaction.kind === 'expense';
+  const data = transaction.data;
+  const amount = parseFloat(data.amount);
+  const date = 'date' in data && data.date ? data.date : data.creationDate;
+  const categoryName =
+    transaction.kind === 'expense'
+      ? transaction.data.category?.name || transaction.data.description || 'Sans catégorie'
+      : transaction.data.source;
+
+  const openDetail = () =>
+    router.push(isExpense ? `/expense/${data.id}` : `/income/${data.id}`);
 
   return (
-    <View style={styles.transactionItem}>
+    <TouchableOpacity style={styles.transactionItem} onPress={openDetail} activeOpacity={0.7}>
       <View
         style={[
           styles.transactionIcon,
@@ -251,17 +274,18 @@ const TransactionItem: React.FC<{
       >
         {isExpense ? '-' : '+'}{formatMoney(amount, currency)}
       </AppText>
-    </View>
+      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+    </TouchableOpacity>
   );
 };
 
 const QuickAction: React.FC<{
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   color: string;
   onPress: () => void;
 }> = ({ icon, label, color, onPress }) => (
-  <View style={styles.quickAction}>
+  <TouchableOpacity style={styles.quickAction} onPress={onPress} activeOpacity={0.7}>
     <View
       style={[
         styles.quickActionIcon,
@@ -273,10 +297,10 @@ const QuickAction: React.FC<{
     <AppText variant="bodySmall" color={colors.text} center style={styles.quickActionLabel}>
       {label}
     </AppText>
-  </View>
+  </TouchableOpacity>
 );
 
-const styles = {
+const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing.xxl,
   },
@@ -409,4 +433,4 @@ const styles = {
   quickActionLabel: {
     marginTop: 0,
   },
-};
+});

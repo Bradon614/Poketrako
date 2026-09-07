@@ -1,142 +1,115 @@
-import React, { useState } from 'react';
-import { Alert, View } from 'react-native';
-import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { incomeService } from '@/services/income.service';
 import { useIncomes } from '@/hooks/useIncomes';
-import { Income, CreateIncomeRequest, UpdateIncomeRequest } from '@/types/api';
-import {
-  Screen,
-  Card,
-  Button,
-  Input,
-  Heading,
-  AppText,
-  LoadingState,
-  IconButton,
-  colors,
-  spacing,
-  borderRadius,
-} from '@/components/ui';
+import { IncomeForm } from '@/components/forms/IncomeForm';
+import { CreateIncomeRequest } from '@/types/api';
+import { Screen, Heading, LoadingState, IconButton, colors, spacing } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { formatMoney, formatDate, toISODateString } from '@/utils';
+import { showError } from '@/utils/notify';
+import { toISODateString } from '@/utils';
 
+// Create + edit screen. Edit mode is triggered by /income/create?edit=true&id=123.
 export default function IncomeCreateScreen() {
-  const { create } = useIncomes();
-  const [formData, setFormData] = useState<CreateIncomeRequest>({
-    amount: 0,
-    date: toISODateString(new Date()),
-    source: '',
-    description: '',
-  });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof CreateIncomeRequest, string>>>({});
+  const { edit, id } = useLocalSearchParams<{ edit?: string; id?: string }>();
+  const isEdit = edit === 'true' && !!id;
+  const incomeId = id ? parseInt(id, 10) : undefined;
+
+  const { create, updateIncome } = useIncomes();
+  const [initial, setInitial] = useState<CreateIncomeRequest | undefined>(undefined);
+  const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
 
-  const validateForm = () => {
-    const errors: Partial<Record<keyof CreateIncomeRequest, string>> = {};
-    if (!formData.amount || formData.amount <= 0) {
-      errors.amount = 'Le montant doit être positif';
-    }
-    if (!formData.date) {
-      errors.date = 'La date est requise';
-    }
-    if (!formData.source || !formData.source.trim()) {
-      errors.source = 'La source est requise';
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  useEffect(() => {
+    const loadIncome = async () => {
+      if (!isEdit || !incomeId) return;
+      setLoading(true);
+      try {
+        const income = await incomeService.getIncome(incomeId);
+        setInitial({
+          amount: parseFloat(income.amount),
+          date: income.date ? income.date.split('T')[0] : toISODateString(new Date()),
+          source: income.source,
+          description: income.description || '',
+        });
+      } catch (err: any) {
+        showError(err.message || 'Impossible de charger le revenu');
+        router.back();
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadIncome();
+  }, [isEdit, incomeId]);
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
+  const handleSubmit = async (payload: CreateIncomeRequest) => {
     setSubmitting(true);
     try {
-      await create(formData);
+      if (isEdit && incomeId) {
+        await updateIncome(incomeId, payload);
+      } else {
+        await create(payload);
+      }
       router.back();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de créer le revenu');
+      showError(err.message || 'Impossible de sauvegarder le revenu');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const updateField = <K extends keyof CreateIncomeRequest>(key: K, value: CreateIncomeRequest[K]) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-  };
-
   return (
     <Screen>
-      <View style={styles.header}>
-        <IconButton
-          icon={<Ionicons name="chevron-back" size={24} color={colors.text} />}
-          onPress={() => router.back()}
-          size="md"
-          variant="ghost"
-        />
-        <Heading level={2}>Nouveau revenu</Heading>
-        <View style={{ width: 44 }} />
-      </View>
-
-      <Card style={styles.formCard}>
-        <Input
-          label="Montant *"
-          value={String(formData.amount)}
-          onChangeText={(v) => updateField('amount', parseFloat(v) || 0)}
-          placeholder="0.00"
-          keyboardType="decimal-pad"
-          error={formErrors.amount}
-          style={styles.input}
-        />
-
-        <Input
-          label="Date *"
-          value={formData.date || ''}
-          onChangeText={(v) => updateField('date', v)}
-          placeholder="YYYY-MM-DD"
-          keyboardType="numeric"
-          error={formErrors.date}
-          style={styles.input}
-        />
-
-        <Input
-          label="Source *"
-          value={formData.source}
-          onChangeText={(v) => updateField('source', v)}
-          placeholder="Ex: Salaire, Freelance, Vente..."
-          error={formErrors.source}
-          style={styles.input}
-        />
-
-        <Input
-          label="Description"
-          value={formData.description}
-          onChangeText={(v) => updateField('description', v)}
-          placeholder="Optionnel"
-          style={styles.input}
-        />
-
-        <View style={styles.formActions}>
-          <Button title="Annuler" onPress={() => router.back()} variant="secondary" fullWidth />
-          <Button title="Créer" onPress={handleSubmit} fullWidth loading={submitting} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex}
+      >
+        <View style={styles.header}>
+          <IconButton
+            icon={<Ionicons name="chevron-back" size={24} color={colors.text} />}
+            onPress={() => router.back()}
+            size="md"
+            variant="ghost"
+          />
+          <Heading level={2}>{isEdit ? 'Modifier le revenu' : 'Nouveau revenu'}</Heading>
+          <View style={{ width: 44 }} />
         </View>
-      </Card>
+
+        {loading ? (
+          <LoadingState fullScreen message="Chargement du revenu..." />
+        ) : (
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <IncomeForm
+              initial={initial}
+              submitting={submitting}
+              editing={isEdit}
+              onSubmit={handleSubmit}
+              onCancel={() => router.back()}
+            />
+          </ScrollView>
+        )}
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row' as const,
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  formCard: {},
-  input: {
     marginBottom: spacing.md,
   },
-  formActions: {
-    flexDirection: 'row' as const,
-    gap: spacing.md,
-    marginTop: spacing.md,
+  scrollContent: {
+    paddingBottom: spacing.xxl,
   },
-};
+});

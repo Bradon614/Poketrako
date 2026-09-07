@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, TouchableOpacity, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { Linking, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useExpenses } from '@/hooks/useExpenses';
+import { useAuth } from '@/hooks/useAuth';
 import { Expense } from '@/types/api';
 import {
   Screen,
   Card,
-  Button,
   Heading,
   AppText,
   LoadingState,
@@ -18,51 +18,53 @@ import {
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { formatMoney, formatDate, getRelativeTime } from '@/utils';
+import { confirmDialog, showError } from '@/utils/notify';
 
 export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
+  const currency = user?.currency || 'MGA';
   const { getExpense, deleteExpense } = useExpenses();
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      loadExpense();
-    }
-  }, [id]);
-
-  const loadExpense = async () => {
+  const loadExpense = useCallback(async () => {
+    if (!id) return;
     setLoading(true);
     try {
       const data = await getExpense(parseInt(id, 10));
       setExpense(data);
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de charger la dépense');
+      showError(err.message || 'Impossible de charger la dépense');
       router.back();
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, getExpense]);
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Supprimer la dépense',
-      'Êtes-vous sûr de vouloir supprimer cette dépense ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: confirmDelete },
-      ]
-    );
-  };
+  // Reload on focus so returning from the edit screen shows fresh data.
+  useFocusEffect(
+    useCallback(() => {
+      loadExpense();
+    }, [loadExpense])
+  );
 
-  const confirmDelete = async () => {
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Supprimer la dépense',
+      message: 'Êtes-vous sûr de vouloir supprimer cette dépense ?',
+      confirmLabel: 'Supprimer',
+      destructive: true,
+    });
+    if (!confirmed) return;
+
     setDeleting(true);
     try {
       await deleteExpense(parseInt(id, 10));
       router.back();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de supprimer');
+      showError(err.message || 'Impossible de supprimer');
     } finally {
       setDeleting(false);
     }
@@ -70,10 +72,7 @@ export default function ExpenseDetailScreen() {
 
   const handleEdit = () => {
     if (expense) {
-      router.push({
-        pathname: '/expense/create',
-        params: { edit: 'true', expense: JSON.stringify(expense) },
-      });
+      router.push(`/expense/create?edit=true&id=${expense.id}`);
     }
   };
 
@@ -124,6 +123,7 @@ export default function ExpenseDetailScreen() {
             onPress={handleDelete}
             size="sm"
             variant="ghost"
+            disabled={deleting}
             accessibilityLabel="Supprimer"
           />
         </View>
@@ -133,7 +133,7 @@ export default function ExpenseDetailScreen() {
         <View style={styles.amountRow}>
           <AppText variant="caption" color={colors.textSecondary}>Montant</AppText>
           <AppText variant="h2" color={colors.error} style={styles.amount}>
-            -{formatMoney(amount, 'MGA')}
+            -{formatMoney(amount, currency)}
           </AppText>
         </View>
 
@@ -169,17 +169,23 @@ export default function ExpenseDetailScreen() {
             <View style={styles.divider} />
             <DetailRow
               label="Justificatif"
-              value="Disponible"
+              value={expense.receiptUpload.filename}
               icon="document"
-              onPress={() => {}}
-              rightIcon={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
+              onPress={() => {
+                const base = (process.env.EXPO_PUBLIC_API_URL || '').replace(/\/+$/, '').replace(/\/api$/, '');
+                const url = `${base}${expense.receiptUpload!.url}`;
+                Linking.openURL(url).catch(() =>
+                  showError('Impossible d\'ouvrir le justificatif')
+                );
+              }}
+              rightIcon={<Ionicons name="open-outline" size={20} color={colors.textMuted} />}
             />
           </>
         )}
 
         <View style={styles.divider} />
         <DetailRow label="Créée le" value={getRelativeTime(expense.creationDate)} icon="time" />
-        <DetailRow label="ID" value={`#${expense.id}`} icon="hash" />
+        <DetailRow label="ID" value={`#${expense.id}`} icon="key" />
       </Card>
     </Screen>
   );
@@ -188,7 +194,7 @@ export default function ExpenseDetailScreen() {
 const DetailRow: React.FC<{
   label: string;
   value: string;
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   valueColor?: string;
   onPress?: () => void;
   rightIcon?: React.ReactNode;
@@ -209,7 +215,7 @@ const DetailRow: React.FC<{
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -256,4 +262,4 @@ const styles = {
   value: {
     marginTop: 2,
   },
-};
+});

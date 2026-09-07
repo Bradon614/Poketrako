@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, TouchableOpacity, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useIncomes } from '@/hooks/useIncomes';
+import { useAuth } from '@/hooks/useAuth';
 import { Income } from '@/types/api';
 import {
   Screen,
   Card,
-  Button,
   Heading,
   AppText,
   LoadingState,
@@ -18,51 +18,53 @@ import {
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { formatMoney, formatDate, getRelativeTime } from '@/utils';
+import { confirmDialog, showError } from '@/utils/notify';
 
 export default function IncomeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
+  const currency = user?.currency || 'MGA';
   const { getIncome, deleteIncome } = useIncomes();
   const [income, setIncome] = useState<Income | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      loadIncome();
-    }
-  }, [id]);
-
-  const loadIncome = async () => {
+  const loadIncome = useCallback(async () => {
+    if (!id) return;
     setLoading(true);
     try {
       const data = await getIncome(parseInt(id, 10));
       setIncome(data);
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de charger le revenu');
+      showError(err.message || 'Impossible de charger le revenu');
       router.back();
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, getIncome]);
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Supprimer le revenu',
-      'Êtes-vous sûr de vouloir supprimer ce revenu ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: confirmDelete },
-      ]
-    );
-  };
+  // Reload on focus so returning from the edit screen shows fresh data.
+  useFocusEffect(
+    useCallback(() => {
+      loadIncome();
+    }, [loadIncome])
+  );
 
-  const confirmDelete = async () => {
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Supprimer le revenu',
+      message: 'Êtes-vous sûr de vouloir supprimer ce revenu ?',
+      confirmLabel: 'Supprimer',
+      destructive: true,
+    });
+    if (!confirmed) return;
+
     setDeleting(true);
     try {
       await deleteIncome(parseInt(id, 10));
       router.back();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de supprimer');
+      showError(err.message || 'Impossible de supprimer');
     } finally {
       setDeleting(false);
     }
@@ -70,10 +72,7 @@ export default function IncomeDetailScreen() {
 
   const handleEdit = () => {
     if (income) {
-      router.push({
-        pathname: '/income/create',
-        params: { edit: 'true', income: JSON.stringify(income) },
-      });
+      router.push(`/income/create?edit=true&id=${income.id}`);
     }
   };
 
@@ -123,6 +122,7 @@ export default function IncomeDetailScreen() {
             onPress={handleDelete}
             size="sm"
             variant="ghost"
+            disabled={deleting}
             accessibilityLabel="Supprimer"
           />
         </View>
@@ -132,7 +132,7 @@ export default function IncomeDetailScreen() {
         <View style={styles.amountRow}>
           <AppText variant="caption" color={colors.textSecondary}>Montant</AppText>
           <AppText variant="h2" color={colors.success} style={styles.amount}>
-            +{formatMoney(amount, 'MGA')}
+            +{formatMoney(amount, currency)}
           </AppText>
         </View>
 
@@ -150,7 +150,7 @@ export default function IncomeDetailScreen() {
 
         <View style={styles.divider} />
         <DetailRow label="Créé le" value={getRelativeTime(income.creationDate)} icon="time" />
-        <DetailRow label="ID" value={`#${income.id}`} icon="hash" />
+        <DetailRow label="ID" value={`#${income.id}`} icon="key" />
       </Card>
     </Screen>
   );
@@ -159,7 +159,7 @@ export default function IncomeDetailScreen() {
 const DetailRow: React.FC<{
   label: string;
   value: string;
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   valueColor?: string;
   onPress?: () => void;
   rightIcon?: React.ReactNode;
@@ -180,7 +180,7 @@ const DetailRow: React.FC<{
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -227,4 +227,4 @@ const styles = {
   value: {
     marginTop: 2,
   },
-};
+});

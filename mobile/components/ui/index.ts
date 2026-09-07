@@ -5,6 +5,8 @@ export { Card } from './Card';
 export { Screen } from './Screen';
 export { AppText, Heading, Body, Caption } from './Text';
 export { IconButton } from './IconButton';
+export { SelectField } from './SelectField';
+export type { SelectOption } from './SelectField';
 export { EmptyState } from './EmptyState';
 export { LoadingState } from './LoadingState';
 export { ErrorState } from './ErrorState';

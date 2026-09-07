@@ -1,5 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, SafeAreaView } from 'react-native';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+// react-native's SafeAreaView is deprecated and iOS-only; the
+// safe-area-context implementation handles notches/status bars on both
+// platforms (and no-ops on web). Only the top edge: tab screens already get
+// their bottom inset from the tab bar.
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from './design';
 
 interface ScreenProps {
@@ -15,18 +20,20 @@ export const Screen: React.FC<ScreenProps> = ({
   safeArea = true,
   backgroundColor = colors.background,
 }) => {
-  const Container = safeArea ? SafeAreaView : View;
+  const baseStyle = [styles.container, { backgroundColor }, style];
+
+  if (safeArea) {
+    return (
+      <SafeAreaView edges={['top']} style={baseStyle}>
+        {children}
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <Container
-      style={[
-        styles.container,
-        { backgroundColor },
-        style,
-      ]}
-    >
+    <View style={baseStyle}>
       {children}
-    </Container>
+    </View>
   );
 };
 

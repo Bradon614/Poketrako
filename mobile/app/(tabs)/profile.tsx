@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Screen,
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { formatMoney } from '@/utils';
+import { confirmDialog, showError } from '@/utils/notify';
 
 const SUPPORTED_CURRENCIES_LIST = ['MGA', 'EUR', 'USD', 'GBP'];
 
@@ -39,7 +40,7 @@ export default function ProfileScreen() {
       await updateBudget(budget);
       setShowBudgetForm(false);
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de mettre à jour le budget');
+      showError(err.message || 'Impossible de mettre à jour le budget');
     } finally {
       setSaving(false);
     }
@@ -51,21 +52,21 @@ export default function ProfileScreen() {
       await updateCurrency(currencyInput);
       setShowCurrencyForm(false);
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de mettre à jour la devise');
+      showError(err.message || 'Impossible de mettre à jour la devise');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Déconnexion', style: 'destructive', onPress: () => logout() },
-      ]
-    );
+  const handleLogout = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Déconnexion',
+      message: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+      confirmLabel: 'Déconnexion',
+      destructive: true,
+    });
+    if (!confirmed) return;
+    await logout();
   };
 
   if (!user) {
@@ -175,7 +176,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.lg,
   },
@@ -239,4 +240,4 @@ const styles = {
   dangerCard: {
     padding: spacing.sm,
   },
-};
+});

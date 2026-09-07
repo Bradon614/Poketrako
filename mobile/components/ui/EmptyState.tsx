@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors, spacing, typography } from './design';
-import { IconButton } from './IconButton';
+import { colors, spacing } from './design';
+import { AppText } from './Text';
+import { Button } from './Button';
 
 interface EmptyStateProps {
   title: string;
@@ -38,9 +39,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     </View>
   );
 };
-
-import { AppText } from './Text';
-import { Button } from './Button';
 
 const styles = StyleSheet.create({
   container: {

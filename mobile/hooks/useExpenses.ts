@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { expenseService } from '@/services/expense.service';
 import { Expense, ExpenseQueryParams, CreateExpenseRequest, UpdateExpenseRequest } from '@/types/api';
 
@@ -17,6 +17,14 @@ export function useExpenses(initialParams?: ExpenseQueryParams): UseExpensesResu
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Keep the latest params in a ref: parents pass inline object literals whose
+  // identity changes every render, which would retrigger the mount effect and
+  // loop fetches forever.
+  const paramsRef = useRef(initialParams);
+
+  useEffect(() => {
+    paramsRef.current = initialParams;
+  }, [initialParams]);
 
   const fetchExpenses = useCallback(async (params?: ExpenseQueryParams) => {
     setLoading(true);
@@ -32,18 +40,20 @@ export function useExpenses(initialParams?: ExpenseQueryParams): UseExpensesResu
   }, []);
 
   useEffect(() => {
-    fetchExpenses(initialParams);
-  }, [fetchExpenses, initialParams]);
+    fetchExpenses(paramsRef.current);
+  }, [fetchExpenses]);
 
-  const getExpense = async (id: number) => {
+  // Stable identity so screens that key focus effects on this function don't
+  // re-run their fetch loop on every render.
+  const getExpense = useCallback(async (id: number) => {
     return expenseService.getExpense(id);
-  };
+  }, []);
 
   const create = async (data: CreateExpenseRequest) => {
     setError(null);
     try {
       const result = await expenseService.createExpense(data);
-      await fetchExpenses(initialParams);
+      await fetchExpenses(paramsRef.current);
       return result;
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la création');
@@ -55,7 +65,7 @@ export function useExpenses(initialParams?: ExpenseQueryParams): UseExpensesResu
     setError(null);
     try {
       await expenseService.updateExpense(id, data);
-      await fetchExpenses(initialParams);
+      await fetchExpenses(paramsRef.current);
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la mise à jour');
       throw err;
@@ -66,7 +76,7 @@ export function useExpenses(initialParams?: ExpenseQueryParams): UseExpensesResu
     setError(null);
     try {
       await expenseService.deleteExpense(id);
-      await fetchExpenses(initialParams);
+      await fetchExpenses(paramsRef.current);
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la suppression');
       throw err;

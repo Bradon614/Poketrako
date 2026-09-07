@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, View, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useCategories } from '@/hooks/useCategories';
 import { Category } from '@/types/api';
 import {
@@ -15,12 +15,12 @@ import {
   RefreshableList,
   colors,
   spacing,
-  borderRadius,
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
+import { confirmDialog, showError } from '@/utils/notify';
 
 export default function CategoriesScreen() {
-  const { categories, loading, error, refetch, create, update, remove } = useCategories();
+  const { categories, loading, refetch, create, update, remove } = useCategories();
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [name, setName] = useState('');
@@ -59,7 +59,7 @@ export default function CategoriesScreen() {
       }
       resetForm();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de sauvegarder');
+      showError(err.message || 'Impossible de sauvegarder');
     } finally {
       setSubmitting(false);
     }
@@ -71,15 +71,19 @@ export default function CategoriesScreen() {
     setShowForm(true);
   };
 
-  const handleDelete = (category: Category) => {
-    Alert.alert(
-      'Supprimer la catégorie',
-      'Êtes-vous sûr de vouloir supprimer cette catégorie ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: () => remove(category.id) },
-      ]
-    );
+  const handleDelete = async (category: Category) => {
+    const confirmed = await confirmDialog({
+      title: 'Supprimer la catégorie',
+      message: 'Êtes-vous sûr de vouloir supprimer cette catégorie ?',
+      confirmLabel: 'Supprimer',
+      destructive: true,
+    });
+    if (!confirmed) return;
+    try {
+      await remove(category.id);
+    } catch (err: any) {
+      showError(err.message || 'Impossible de supprimer');
+    }
   };
 
   const handleAddCategory = () => {
@@ -222,7 +226,7 @@ const CategoryCard: React.FC<{
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   header: {
     flexDirection: 'row' as const,
     justifyContent: 'space-between',
@@ -269,4 +273,4 @@ const styles = {
     alignItems: 'center',
     gap: spacing.xs,
   },
-};
+});

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -9,10 +9,12 @@ import {
   Button,
   Heading,
   AppText,
+  LoadingState,
   colors,
   spacing,
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
+import { showError } from '@/utils/notify';
 
 export default function SignupScreen() {
   const { signup } = useAuth();
@@ -54,13 +56,11 @@ export default function SignupScreen() {
     setLoading(true);
     try {
       await signup(email, password, fullName || undefined);
-      Alert.alert(
-        'Compte créé',
-        'Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
-      );
+      // Navigate directly: Alert.alert callbacks never fire on web, so the
+      // redirect must not live inside the dialog.
+      router.replace('/(auth)/login');
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible de créer le compte');
+      showError(error.message || 'Impossible de créer le compte');
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function SignupScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
       >
         <View style={styles.header}>
@@ -166,9 +166,8 @@ export default function SignupScreen() {
   );
 }
 
-import { View } from 'react-native';
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -221,4 +220,4 @@ const styles = {
     marginTop: spacing.lg,
     gap: spacing.sm,
   },
-};
+});

@@ -1,4 +1,4 @@
-import { StyleSheet, ViewStyle, TextStyle, ImageStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export const colors = {
   primary: '#2563EB',

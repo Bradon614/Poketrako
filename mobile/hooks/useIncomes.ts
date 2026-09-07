@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { incomeService } from '@/services/income.service';
 import { Income, IncomeQueryParams, CreateIncomeRequest, UpdateIncomeRequest } from '@/types/api';
 
@@ -17,6 +17,14 @@ export function useIncomes(initialParams?: IncomeQueryParams): UseIncomesResult 
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Keep the latest params in a ref: parents pass inline object literals whose
+  // identity changes every render, which would retrigger the mount effect and
+  // loop fetches forever.
+  const paramsRef = useRef(initialParams);
+
+  useEffect(() => {
+    paramsRef.current = initialParams;
+  }, [initialParams]);
 
   const fetchIncomes = useCallback(async (params?: IncomeQueryParams) => {
     setLoading(true);
@@ -32,18 +40,20 @@ export function useIncomes(initialParams?: IncomeQueryParams): UseIncomesResult 
   }, []);
 
   useEffect(() => {
-    fetchIncomes(initialParams);
-  }, [fetchIncomes, initialParams]);
+    fetchIncomes(paramsRef.current);
+  }, [fetchIncomes]);
 
-  const getIncome = async (id: number) => {
+  // Stable identity so screens that key focus effects on this function don't
+  // re-run their fetch loop on every render.
+  const getIncome = useCallback(async (id: number) => {
     return incomeService.getIncome(id);
-  };
+  }, []);
 
   const create = async (data: CreateIncomeRequest) => {
     setError(null);
     try {
       const result = await incomeService.createIncome(data);
-      await fetchIncomes(initialParams);
+      await fetchIncomes(paramsRef.current);
       return result;
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la création');
@@ -55,7 +65,7 @@ export function useIncomes(initialParams?: IncomeQueryParams): UseIncomesResult 
     setError(null);
     try {
       await incomeService.updateIncome(id, data);
-      await fetchIncomes(initialParams);
+      await fetchIncomes(paramsRef.current);
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la mise à jour');
       throw err;
@@ -66,7 +76,7 @@ export function useIncomes(initialParams?: IncomeQueryParams): UseIncomesResult 
     setError(null);
     try {
       await incomeService.deleteIncome(id);
-      await fetchIncomes(initialParams);
+      await fetchIncomes(paramsRef.current);
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la suppression');
       throw err;

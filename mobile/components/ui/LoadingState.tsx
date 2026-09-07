@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { colors, spacing } from './design';
+import { AppText } from './Text';
 
 interface LoadingStateProps {
   message?: string;
@@ -29,8 +30,6 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
     </View>
   );
 };
-
-import { AppText } from './Text';
 
 const styles = StyleSheet.create({
   container: {

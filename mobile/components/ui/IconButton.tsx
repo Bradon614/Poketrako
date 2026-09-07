@@ -1,10 +1,9 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, shadows } from './design';
+import { colors, borderRadius, shadows } from './design';
 
 interface IconButtonProps {
-  icon: string; // Ionicons name
+  icon: React.ReactNode;
   onPress: () => void;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -23,9 +22,9 @@ export const IconButton: React.FC<IconButtonProps> = ({
   accessibilityLabel,
 }) => {
   const sizeMap = {
-    sm: { size: 36, iconSize: 20 },
-    md: { size: 44, iconSize: 24 },
-    lg: { size: 52, iconSize: 28 },
+    sm: 36,
+    md: 44,
+    lg: 52,
   };
 
   const variantStyles = {
@@ -35,9 +34,8 @@ export const IconButton: React.FC<IconButtonProps> = ({
     danger: { backgroundColor: colors.error, ...shadows.sm },
   };
 
-  const { size: buttonSize, iconSize } = sizeMap[size];
+  const buttonSize = sizeMap[size];
   const variantStyle = variantStyles[variant];
-  const iconColor = variant === 'ghost' ? colors.primary : colors.white;
 
   return (
     <TouchableOpacity
@@ -55,7 +53,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
       accessibilityRole="button"
       accessibilityState={{ disabled }}
     >
-      <Ionicons name={icon} size={iconSize} color={iconColor} />
+      {icon}
     </TouchableOpacity>
   );
 };
@@ -63,8 +61,8 @@ export const IconButton: React.FC<IconButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     borderRadius: borderRadius.full,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   disabled: {
     opacity: 0.4,

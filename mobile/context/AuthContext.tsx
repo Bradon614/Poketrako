@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api } from '@/services/api';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { api, setUnauthorizedHandler } from '@/services/api';
 import { authService } from '@/services/auth.service';
 import { MeResponse } from '@/types/api';
 
@@ -58,11 +58,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authService.signup({ email, password, fullName });
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await api.setToken(null);
     setToken(null);
     setUser(null);
-  };
+  }, []);
+
+  // A 401 on any authenticated request clears the token inside the API client;
+  // this handler resets the auth state so the AuthGate routes back to login.
+  // The handler clears only (never redirects itself), so an in-flight burst of
+  // 401s can't loop navigation.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setToken(null);
+      setUser(null);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   const updateBudget = async (budget: number) => {
     const response = await authService.updateBudget(budget);
