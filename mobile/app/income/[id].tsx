@@ -1,26 +1,30 @@
 import React, { useCallback, useState } from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useIncomes } from '@/hooks/useIncomes';
 import { useAuth } from '@/hooks/useAuth';
 import { Income } from '@/types/api';
 import {
-  Screen,
-  Card,
-  Heading,
+  Appear,
   AppText,
-  LoadingState,
+  Card,
+  Chip,
   EmptyState,
+  GlassSurface,
   IconButton,
-  colors,
-  spacing,
-  borderRadius,
+  ListRow,
+  LoadingState,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
 } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
 import { formatMoney, formatDate, getRelativeTime } from '@/utils';
 import { confirmDialog, showError } from '@/utils/notify';
+import { radius, spacing, useTheme } from '@/theme';
 
 export default function IncomeDetailScreen() {
+  const { theme } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const currency = user?.currency || 'MGA';
@@ -89,8 +93,8 @@ export default function IncomeDetailScreen() {
       <Screen>
         <EmptyState
           title="Revenu introuvable"
-          message="Ce revenu n'existe plus ou a été supprimé"
-          icon={<Ionicons name="cash-outline" size={48} color={colors.textMuted} />}
+          message="Ce revenu n'existe plus ou a été supprimé."
+          iconName="cash-outline"
           action={{ label: 'Retour', onPress: () => router.back() }}
         />
       </Screen>
@@ -100,131 +104,101 @@ export default function IncomeDetailScreen() {
   const amount = parseFloat(income.amount);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <IconButton
-          icon={<Ionicons name="chevron-back" size={24} color={colors.text} />}
-          onPress={() => router.back()}
-          size="md"
-          variant="ghost"
-        />
-        <Heading level={2}>Détail du revenu</Heading>
-        <View style={styles.headerActions}>
-          <IconButton
-            icon={<Ionicons name="create-outline" size={22} color={colors.primary} />}
-            onPress={handleEdit}
-            size="sm"
-            variant="ghost"
-            accessibilityLabel="Modifier"
-          />
-          <IconButton
-            icon={<Ionicons name="trash-outline" size={22} color={colors.error} />}
-            onPress={handleDelete}
-            size="sm"
-            variant="ghost"
-            disabled={deleting}
-            accessibilityLabel="Supprimer"
-          />
-        </View>
-      </View>
+    <Screen scroll>
+      <ScreenHeader
+        title="Détail du revenu"
+        eyebrow={getRelativeTime(income.date)}
+        onBack={() => router.back()}
+        actions={
+          <>
+            <IconButton
+              name="create-outline"
+              onPress={handleEdit}
+              size="md"
+              variant="glass"
+              accessibilityLabel="Modifier"
+            />
+            <IconButton
+              name="trash-outline"
+              onPress={handleDelete}
+              size="md"
+              variant="danger"
+              disabled={deleting}
+              accessibilityLabel="Supprimer"
+            />
+          </>
+        }
+      />
 
-      <Card style={styles.detailCard}>
-        <View style={styles.amountRow}>
-          <AppText variant="caption" color={colors.textSecondary}>Montant</AppText>
-          <AppText variant="h2" color={colors.success} style={styles.amount}>
+      <Appear>
+        <Card padding="lg" style={styles.heroCard}>
+          <View style={[styles.heroIconWell, { backgroundColor: theme.colors.incomeSoft }]}>
+            <Ionicons name="cash-outline" size={24} color={theme.colors.income} />
+          </View>
+          <AppText variant="label" tone="secondary" uppercase>
+            Montant reçu
+          </AppText>
+          <AppText
+            variant="amountLarge"
+            tone="income"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
+            style={styles.heroAmount}
+          >
             +{formatMoney(amount, currency)}
           </AppText>
-        </View>
+          <View style={styles.heroChips}>
+            <Chip label={income.source} icon="briefcase-outline" tone="neutral" />
+          </View>
+        </Card>
+      </Appear>
 
-        <View style={styles.divider} />
+      <Appear delay={60} style={styles.section}>
+        <SectionHeader title="Informations" />
+        <GlassSurface variant="card" padding="none">
+          <ListRow icon="briefcase-outline" title="Source" value={income.source} />
+          <ListRow icon="calendar-outline" title="Date" value={formatDate(income.date)} last={!income.description} />
+          {income.description && (
+            <ListRow icon="document-text-outline" title="Description" subtitle={income.description} last />
+          )}
+        </GlassSurface>
+      </Appear>
 
-        <DetailRow label="Source" value={income.source} icon="cash" />
-        <DetailRow label="Date" value={formatDate(income.date)} icon="calendar" />
-
-        {income.description && (
-          <>
-            <View style={styles.divider} />
-            <DetailRow label="Description" value={income.description} icon="document-text" />
-          </>
-        )}
-
-        <View style={styles.divider} />
-        <DetailRow label="Créé le" value={getRelativeTime(income.creationDate)} icon="time" />
-        <DetailRow label="ID" value={`#${income.id}`} icon="key" />
-      </Card>
+      <Appear delay={120} style={styles.section}>
+        <GlassSurface variant="subtle" padding="none">
+          <ListRow icon="time-outline" title="Créé" value={getRelativeTime(income.creationDate)} />
+          <ListRow icon="key-outline" title="Identifiant" value={`#${income.id}`} last />
+        </GlassSurface>
+      </Appear>
     </Screen>
   );
 }
 
-const DetailRow: React.FC<{
-  label: string;
-  value: string;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  valueColor?: string;
-  onPress?: () => void;
-  rightIcon?: React.ReactNode;
-}> = ({ label, value, icon, valueColor, onPress, rightIcon }) => {
-  return (
-    <TouchableOpacity onPress={onPress} style={styles.detailRow} activeOpacity={0.7}>
-      <View style={styles.iconWrapper}>
-        <Ionicons name={icon} size={20} color={colors.textMuted} />
-      </View>
-      <View style={styles.detailContent}>
-        <AppText variant="caption" color={colors.textSecondary}>{label}</AppText>
-        <AppText variant="body" color={valueColor || colors.text} style={styles.value}>
-          {value}
-        </AppText>
-      </View>
-      {rightIcon}
-    </TouchableOpacity>
-  );
-};
-
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
+  heroCard: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    borderRadius: radius.xxl,
   },
-  headerActions: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  detailCard: {},
-  amountRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  amount: {
-    marginBottom: 0,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.md,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    gap: spacing.md,
-  },
-  iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surfaceVariant,
+  heroIconWell: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.md,
   },
-  detailContent: {
-    flex: 1,
-    minWidth: 0,
+  heroAmount: {
+    marginTop: spacing.xxs,
+    marginBottom: spacing.md,
   },
-  value: {
-    marginTop: 2,
+  heroChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: spacing.sm - 2,
+  },
+  section: {
+    marginTop: spacing.lg,
   },
 });

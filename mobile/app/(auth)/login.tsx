@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  Screen,
-  Card,
-  Input,
-  Button,
-  Heading,
   AppText,
+  Button,
+  Card,
+  Heading,
+  IconButton,
+  Input,
   LoadingState,
-  colors,
-  spacing,
+  Screen,
 } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
 import { showError } from '@/utils/notify';
+import { radius, spacing, useTheme } from '@/theme';
 
 export default function LoginScreen() {
+  const { theme, toggleScheme } = useTheme();
   const { login } = useAuth();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const [email, setEmail] = useState('');
@@ -62,7 +64,7 @@ export default function LoginScreen() {
 
   if (loading) {
     return (
-      <Screen style={styles.centered}>
+      <Screen>
         <LoadingState message="Connexion en cours..." fullScreen />
       </Screen>
     );
@@ -72,126 +74,157 @@ export default function LoginScreen() {
     <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        style={styles.flex}
       >
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="wallet" size={48} color={colors.primary} />
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.topBar}>
+            <IconButton
+              name={theme.isDark ? 'sunny-outline' : 'moon-outline'}
+              onPress={toggleScheme}
+              size="md"
+              variant="glass"
+              accessibilityLabel={theme.isDark ? 'Passer en thème clair' : 'Passer en thème sombre'}
+            />
           </View>
-          <Heading level={1} style={styles.title}>
-            POKETRAKO
-          </Heading>
-          <AppText variant="body" color={colors.textSecondary} center style={styles.subtitle}>
-            Gérez vos finances simplement
-          </AppText>
-        </View>
 
-        <Card style={styles.card}>
-          <Heading level={3} style={styles.formTitle}>
-            Connexion
-          </Heading>
+          <View style={styles.brand}>
+            <View style={[styles.logoGlow, theme.shadows.accent]}>
+              <LinearGradient
+                colors={theme.colors.accentGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.logo}
+              >
+                <Ionicons name="wallet" size={30} color={theme.colors.textOnAccent} />
+              </LinearGradient>
+            </View>
+            <Heading level={1} center style={styles.title}>
+              POKETRAKO
+            </Heading>
+            <AppText variant="bodySmall" tone="secondary" center>
+              Gérez vos finances simplement
+            </AppText>
+          </View>
 
-          <Input
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="vous@exemple.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            error={emailError}
-            style={styles.input}
-          />
+          <Card padding="lg" style={styles.card}>
+            <Heading level={3} style={styles.formTitle}>
+              Connexion
+            </Heading>
 
-          <Input
-            label="Mot de passe"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-            autoComplete="password"
-            error={passwordError}
-            style={styles.input}
-          />
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="vous@exemple.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              error={emailError}
+              leftIcon={<Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />}
+              style={styles.input}
+            />
 
-          <Button
-            title="Se connecter"
-            onPress={handleLogin}
-            fullWidth
-            size="lg"
-            style={styles.submitButton}
-          />
-        </Card>
+            <Input
+              label="Mot de passe"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry
+              autoComplete="password"
+              error={passwordError}
+              leftIcon={
+                <Ionicons name="lock-closed-outline" size={18} color={theme.colors.textMuted} />
+              }
+              style={styles.input}
+              onSubmitEditing={handleLogin}
+              returnKeyType="go"
+            />
 
-        <View style={styles.footer}>
-          <AppText variant="body" color={colors.textSecondary}>
-            Pas encore de compte ?
-          </AppText>
-          <Button
-            title="S'inscrire"
-            onPress={() => router.push('/(auth)/signup')}
-            variant="ghost"
-            size="md"
-          />
-        </View>
+            <Button
+              title="Se connecter"
+              onPress={handleLogin}
+              fullWidth
+              size="lg"
+              style={styles.submitButton}
+              icon="log-in-outline"
+            />
+          </Card>
+
+          <View style={styles.footer}>
+            <AppText variant="bodySmall" tone="secondary">
+              Pas encore de compte ?
+            </AppText>
+            <Button
+              title="S'inscrire"
+              onPress={() => router.push('/(auth)/signup')}
+              variant="ghost"
+              size="sm"
+            />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
   },
-  centered: {
-    flex: 1,
+  scroll: {
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    paddingBottom: spacing.xl,
   },
-  header: {
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: spacing.sm,
+  },
+  brand: {
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoGlow: {
+    borderRadius: radius.xl,
     marginBottom: spacing.md,
   },
-  title: {
-    color: colors.text,
-    marginBottom: spacing.xs,
+  logo: {
+    width: 68,
+    height: 68,
+    borderRadius: radius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  subtitle: {
-    marginBottom: 0,
+  title: {
+    letterSpacing: 1.5,
+    marginBottom: spacing.xs,
   },
   card: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 420,
     alignSelf: 'center',
+    borderRadius: radius.xxl,
   },
   formTitle: {
     marginBottom: spacing.lg,
-    textAlign: 'center',
   },
   input: {
     marginBottom: spacing.md,
   },
   submitButton: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.sm - 4,
   },
 });

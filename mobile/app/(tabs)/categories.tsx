@@ -1,25 +1,29 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useCategories } from '@/hooks/useCategories';
 import { Category } from '@/types/api';
 import {
-  Screen,
-  Card,
-  Button,
-  Input,
-  Heading,
+  Appear,
   AppText,
+  Button,
+  Card,
   EmptyState,
-  LoadingState,
+  GlassSurface,
+  Heading,
   IconButton,
+  Input,
+  LoadingState,
   RefreshableList,
-  colors,
-  spacing,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
 } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { confirmDialog, showError } from '@/utils/notify';
+import { confirmDialog, showError, getCategoryVisual } from '@/utils';
+import { radius, spacing, useThemedStyles, type Theme } from '@/theme';
 
 export default function CategoriesScreen() {
+  const styles = useThemedStyles(createStyles);
   const { categories, loading, refetch, create, update, remove } = useCategories();
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -101,44 +105,98 @@ export default function CategoriesScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Heading level={2}>Catégories</Heading>
-        <Button title="Ajouter" onPress={handleAddCategory} variant="primary" size="sm" />
-      </View>
+      <ScreenHeader
+        title="Catégories"
+        subtitle={
+          categories.length > 0
+            ? `${categories.length} catégorie${categories.length > 1 ? 's' : ''} pour classer vos dépenses`
+            : 'Organisez vos dépenses par thème'
+        }
+        actions={
+          showForm ? undefined : (
+            <Button title="Ajouter" onPress={handleAddCategory} variant="primary" size="sm" icon="add" pill />
+          )
+        }
+      />
 
       {showForm && (
-        <CategoryForm
-          name={name}
-          nameError={nameError}
-          submitting={submitting}
-          editing={!!editingCategory}
-          onNameChange={setName}
-          onSubmit={handleSubmit}
-          onCancel={resetForm}
-        />
+        <Appear>
+          <CategoryForm
+            name={name}
+            nameError={nameError}
+            submitting={submitting}
+            editing={!!editingCategory}
+            onNameChange={setName}
+            onSubmit={handleSubmit}
+            onCancel={resetForm}
+          />
+        </Appear>
       )}
 
       {categories.length === 0 ? (
         <EmptyState
           title="Aucune catégorie"
-          message="Créez votre première catégorie pour organiser vos dépenses"
-          icon={<Ionicons name="pricetags-outline" size={48} color={colors.textMuted} />}
+          message="Créez votre première catégorie pour organiser vos dépenses (Alimentation, Transport, Logement…)."
+          iconName="pricetags-outline"
           action={{ label: 'Créer une catégorie', onPress: handleAddCategory }}
         />
       ) : (
         <RefreshableList
           refreshing={loading}
           onRefresh={refetch}
-          contentContainerStyle={styles.list}
+          style={styles.list}
+          tabBarSpace
+          contentContainerStyle={styles.listContent}
         >
-          {categories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
+          {!showForm && (
+            <SectionHeader title="Toutes les catégories" caption="Icône et couleur générées automatiquement" />
+          )}
+
+          {categories.map((category, index) => {
+            const visual = getCategoryVisual(category.name);
+            const isEditing = editingCategory?.id === category.id && showForm;
+            return (
+              <Appear key={category.id} delay={Math.min(index, 8) * 25} offset={10}>
+                <GlassSurface
+                  variant="card"
+                  padding="none"
+                  style={[styles.card, isEditing && styles.cardEditing]}
+                >
+                  <View style={styles.row}>
+                    <View style={[styles.iconWell, { backgroundColor: `${visual.color}1F` }]}>
+                      <Ionicons name={visual.icon} size={20} color={visual.color} />
+                    </View>
+
+                    <View style={styles.main}>
+                      <AppText variant="body" numberOfLines={1}>
+                        {category.name}
+                      </AppText>
+                      <AppText variant="caption" tone="muted">
+                        Créée le {new Date(category.createdAt).toLocaleDateString('fr-FR')}
+                      </AppText>
+                    </View>
+
+                    <View style={styles.actions}>
+                      <IconButton
+                        name="create-outline"
+                        onPress={() => handleEdit(category)}
+                        size="sm"
+                        variant="glass"
+                        accessibilityLabel={`Modifier ${category.name}`}
+                      />
+                      <IconButton
+                        name="trash-outline"
+                        onPress={() => handleDelete(category)}
+                        size="sm"
+                        variant="danger"
+                        accessibilityLabel={`Supprimer ${category.name}`}
+                      />
+                    </View>
+                  </View>
+                </GlassSurface>
+              </Appear>
+            );
+          })}
         </RefreshableList>
       )}
     </Screen>
@@ -154,26 +212,30 @@ const CategoryForm: React.FC<{
   onSubmit: () => void;
   onCancel: () => void;
 }> = ({ name, nameError, submitting, editing, onNameChange, onSubmit, onCancel }) => {
+  const styles = useThemedStyles(createStyles);
+
   return (
-    <Card style={styles.formCard}>
+    <Card style={styles.formCard} padding="lg">
       <View style={styles.formHeader}>
         <Heading level={3}>{editing ? 'Modifier la catégorie' : 'Nouvelle catégorie'}</Heading>
         <IconButton
-          icon={<Ionicons name="close" size={24} color={colors.textSecondary} />}
+          name="close"
           onPress={onCancel}
           size="sm"
-          variant="ghost"
+          variant="glass"
+          accessibilityLabel="Fermer"
         />
       </View>
 
       <Input
-        label="Nom *"
+        label="Nom"
         value={name}
         onChangeText={onNameChange}
-        placeholder="Ex: Alimentation, Transport, Loisirs..."
+        placeholder="Ex : Alimentation, Transport, Loisirs…"
         error={nameError}
         maxLength={100}
-        style={styles.input}
+        autoFocus
+        style={styles.formInput}
       />
 
       <View style={styles.formActions}>
@@ -189,88 +251,58 @@ const CategoryForm: React.FC<{
   );
 };
 
-const CategoryCard: React.FC<{
-  category: Category;
-  onEdit: (category: Category) => void;
-  onDelete: (category: Category) => void;
-}> = ({ category, onEdit, onDelete }) => {
-  return (
-    <Card style={styles.categoryCard}>
-      <View style={styles.categoryHeader}>
-        <View style={styles.categoryMain}>
-          <AppText variant="body" color={colors.text} style={styles.categoryName}>
-            {category.name}
-          </AppText>
-          <AppText variant="caption" color={colors.textMuted}>
-            Créée le {new Date(category.createdAt).toLocaleDateString('fr-FR')}
-          </AppText>
-        </View>
-        <View style={styles.categoryActions}>
-          <IconButton
-            icon={<Ionicons name="create-outline" size={20} color={colors.textSecondary} />}
-            onPress={() => onEdit(category)}
-            size="sm"
-            variant="ghost"
-            accessibilityLabel="Modifier"
-          />
-          <IconButton
-            icon={<Ionicons name="trash-outline" size={20} color={colors.error} />}
-            onPress={() => onDelete(category)}
-            size="sm"
-            variant="ghost"
-            accessibilityLabel="Supprimer"
-          />
-        </View>
-      </View>
-    </Card>
-  );
-};
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  list: {
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  formCard: {
-    marginBottom: spacing.lg,
-  },
-  formHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  input: {
-    marginBottom: spacing.md,
-  },
-  formActions: {
-    flexDirection: 'row' as const,
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  categoryCard: {
-    marginBottom: spacing.md,
-  },
-  categoryHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  categoryMain: {
-    flex: 1,
-  },
-  categoryName: {
-    marginBottom: spacing.xs,
-  },
-  categoryActions: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    list: {
+      flex: 1,
+    },
+    listContent: {
+      gap: spacing.sm + 4,
+      paddingTop: spacing.xxs,
+    },
+    card: {
+      borderRadius: radius.xl,
+    },
+    cardEditing: {
+      borderColor: theme.colors.accent,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md - 2,
+    },
+    iconWell: {
+      width: 42,
+      height: 42,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: spacing.md - 4,
+    },
+    main: {
+      flex: 1,
+      minWidth: 0,
+    },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    formCard: {
+      marginBottom: spacing.lg,
+      borderRadius: radius.xl,
+    },
+    formHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    formInput: {
+      marginBottom: spacing.md,
+    },
+    formActions: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginTop: spacing.sm,
+    },
+  });

@@ -1,32 +1,52 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  Screen,
-  Card,
-  Button,
-  Input,
-  Heading,
+  Appear,
   AppText,
+  Button,
+  Card,
+  Chip,
+  GlassSurface,
+  Input,
   LoadingState,
-  colors,
-  spacing,
-  borderRadius,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
+  SegmentedControl,
+  type SegmentedOption,
 } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
 import { formatMoney } from '@/utils';
 import { confirmDialog, showError } from '@/utils/notify';
+import { radius, spacing, useThemedStyles, useTheme, type Theme, type ThemeMode } from '@/theme';
 
 const SUPPORTED_CURRENCIES_LIST = ['MGA', 'EUR', 'USD', 'GBP'];
 
+const THEME_OPTIONS: readonly SegmentedOption<ThemeMode>[] = [
+  { label: 'Clair', value: 'light', icon: 'sunny-outline' },
+  { label: 'Sombre', value: 'dark', icon: 'moon-outline' },
+  { label: 'Système', value: 'system', icon: 'phone-portrait-outline' },
+];
+
+/** Two-letter initials used by the avatar. */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
 export default function ProfileScreen() {
+  const styles = useThemedStyles(createStyles);
+  const { theme, mode, setMode } = useTheme();
   const { user, logout, updateBudget, updateCurrency } = useAuth();
   const [showBudgetForm, setShowBudgetForm] = useState(false);
-  const [showCurrencyForm, setShowCurrencyForm] = useState(false);
   const [budgetInput, setBudgetInput] = useState(String(user?.budget || 0));
-  const [currencyInput, setCurrencyInput] = useState(user?.currency || 'MGA');
   const [budgetError, setBudgetError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [savingCurrency, setSavingCurrency] = useState<string | null>(null);
 
   const handleBudgetSave = async () => {
     const budget = parseFloat(budgetInput) || 0;
@@ -46,15 +66,15 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleCurrencySave = async () => {
-    setSaving(true);
+  const handleCurrencyChange = async (currency: string) => {
+    if (currency === user?.currency) return;
+    setSavingCurrency(currency);
     try {
-      await updateCurrency(currencyInput);
-      setShowCurrencyForm(false);
+      await updateCurrency(currency);
     } catch (err: any) {
       showError(err.message || 'Impossible de mettre à jour la devise');
     } finally {
-      setSaving(false);
+      setSavingCurrency(null);
     }
   };
 
@@ -77,167 +97,293 @@ export default function ProfileScreen() {
     );
   }
 
+  const displayName = user.fullName || user.email.split('@')[0];
+  const budget = user.budget || 0;
+
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Heading level={2}>Profil</Heading>
-      </View>
+    <Screen scroll tabBarSpace keyboardShouldPersistTaps="handled">
+      <>
+        <ScreenHeader title="Profil" subtitle="Votre compte et vos préférences" />
 
-      <Card style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Ionicons name="person-circle" size={80} color={colors.primary} />
-        </View>
-        <AppText variant="h3" color={colors.text} center style={styles.name}>
-          {user.fullName || user.email.split('@')[0]}
-        </AppText>
-        <AppText variant="body" color={colors.textSecondary} center style={styles.email}>
-          {user.email}
-        </AppText>
-      </Card>
-
-      <Card style={styles.settingsCard}>
-        <Heading level={3} style={styles.sectionTitle}>Paramètres</Heading>
-
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <AppText variant="body" color={colors.text}>Budget mensuel</AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              {user.budget > 0
-                ? formatMoney(user.budget, user.currency)
-                : 'Aucun budget défini'}
-            </AppText>
-          </View>
-          <Button
-            title={showBudgetForm ? 'Enregistrer' : 'Modifier'}
-            onPress={showBudgetForm ? handleBudgetSave : () => setShowBudgetForm(true)}
-            variant={showBudgetForm ? 'primary' : 'ghost'}
-            size="sm"
-            loading={saving}
-          />
-        </View>
-
-        {showBudgetForm && (
-          <Input
-            label="Budget mensuel"
-            value={budgetInput}
-            onChangeText={setBudgetInput}
-            placeholder="0.00"
-            keyboardType="decimal-pad"
-            error={budgetError}
-            style={styles.formInput}
-          />
-        )}
-
-        <View style={styles.divider} />
-
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <AppText variant="body" color={colors.text}>Devise</AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              {user.currency}
-            </AppText>
-          </View>
-          <Button
-            title={showCurrencyForm ? 'Enregistrer' : 'Modifier'}
-            onPress={showCurrencyForm ? handleCurrencySave : () => setShowCurrencyForm(true)}
-            variant={showCurrencyForm ? 'primary' : 'ghost'}
-            size="sm"
-            loading={saving}
-          />
-        </View>
-
-        {showCurrencyForm && (
-          <View style={styles.currencySelector}>
-            {SUPPORTED_CURRENCIES_LIST.map((curr) => (
-              <TouchableOpacity
-                key={curr}
-                onPress={() => setCurrencyInput(curr)}
-                style={[
-                  styles.currencyOption,
-                  currencyInput === curr && styles.currencyOptionActive,
-                ]}
+        {/* Identity card: accent-gradient avatar + name + at-a-glance settings. */}
+        <Appear>
+          <Card padding="lg" style={styles.identityCard}>
+            <View style={styles.avatarWrapper}>
+              <LinearGradient
+                colors={theme.colors.accentGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatar}
               >
-                <AppText
-                  variant="body"
-                  color={currencyInput === curr ? colors.white : colors.text}
-                >
-                  {curr}
+                <AppText variant="h2" color={theme.colors.textOnAccent}>
+                  {initialsOf(displayName)}
                 </AppText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </Card>
+              </LinearGradient>
+            </View>
 
-      <Card style={styles.dangerCard}>
-        <Button title="Se déconnecter" onPress={handleLogout} variant="danger" fullWidth />
-      </Card>
+            <AppText variant="h3" center numberOfLines={1} style={styles.name}>
+              {displayName}
+            </AppText>
+            <AppText variant="bodySmall" tone="secondary" center numberOfLines={1}>
+              {user.email}
+            </AppText>
+
+            <View style={styles.identityChips}>
+              <Chip label={user.currency} icon="cash-outline" tone="accent" />
+              <Chip
+                label={budget > 0 ? `Budget ${formatMoney(budget, user.currency)}` : 'Aucun budget'}
+                icon="pie-chart-outline"
+                tone={budget > 0 ? 'income' : 'neutral'}
+              />
+            </View>
+          </Card>
+        </Appear>
+
+        {/* Preferences */}
+        <Appear delay={60} style={styles.section}>
+          <SectionHeader title="Préférences" />
+          <Card padding="lg" style={styles.card}>
+            <View style={styles.fieldHeader}>
+              <View style={styles.fieldTitles}>
+                <AppText variant="body">Apparence</AppText>
+                <AppText variant="caption" tone="muted">
+                  Thème clair, sombre ou selon le système
+                </AppText>
+              </View>
+            </View>
+            <SegmentedControl
+              options={THEME_OPTIONS}
+              value={mode}
+              onChange={setMode}
+              style={styles.themeControl}
+            />
+
+            <View style={styles.divider} />
+
+            <View style={styles.fieldHeader}>
+              <View style={styles.fieldTitles}>
+                <AppText variant="body">Devise</AppText>
+                <AppText variant="caption" tone="muted">
+                  Utilisée pour tous vos montants
+                </AppText>
+              </View>
+            </View>
+            <View style={styles.currencyRow}>
+              {SUPPORTED_CURRENCIES_LIST.map((curr) => (
+                <Chip
+                  key={curr}
+                  label={savingCurrency === curr ? `${curr}…` : curr}
+                  selected={user.currency === curr}
+                  tone="accent"
+                  onPress={() => handleCurrencyChange(curr)}
+                  accessibilityLabel={`Choisir la devise ${curr}`}
+                />
+              ))}
+            </View>
+          </Card>
+        </Appear>
+
+        {/* Budget */}
+        <Appear delay={120} style={styles.section}>
+          <SectionHeader title="Budget mensuel" />
+          <Card padding="lg" style={styles.card}>
+            <View style={styles.budgetRow}>
+              <View style={styles.fieldTitles}>
+                <AppText variant="amount" tone={budget > 0 ? 'default' : 'muted'}>
+                  {budget > 0 ? formatMoney(budget, user.currency) : 'Non défini'}
+                </AppText>
+                <AppText variant="caption" tone="muted">
+                  {budget > 0
+                    ? 'Comparé à vos dépenses du mois sur le tableau de bord'
+                    : 'Définissez un plafond pour suivre votre progression'}
+                </AppText>
+              </View>
+              <Button
+                title={showBudgetForm ? 'Annuler' : budget > 0 ? 'Modifier' : 'Définir'}
+                onPress={() => {
+                  if (showBudgetForm) {
+                    setShowBudgetForm(false);
+                    setBudgetInput(String(budget));
+                    setBudgetError('');
+                  } else {
+                    setBudgetInput(String(budget || ''));
+                    setShowBudgetForm(true);
+                  }
+                }}
+                variant={showBudgetForm ? 'secondary' : 'primary'}
+                size="sm"
+                pill
+              />
+            </View>
+
+            {showBudgetForm && (
+              <View style={styles.budgetForm}>
+                <Input
+                  label="Montant du budget mensuel"
+                  value={budgetInput}
+                  onChangeText={setBudgetInput}
+                  placeholder="0"
+                  keyboardType="decimal-pad"
+                  error={budgetError}
+                  returnKeyType="done"
+                  onSubmitEditing={handleBudgetSave}
+                  leftIcon={<Ionicons name="wallet-outline" size={18} color={theme.colors.textMuted} />}
+                />
+                <Button
+                  title="Enregistrer"
+                  onPress={handleBudgetSave}
+                  loading={saving}
+                  fullWidth
+                  icon="checkmark"
+                />
+              </View>
+            )}
+          </Card>
+        </Appear>
+
+        {/* Account */}
+        <Appear delay={180} style={styles.section}>
+          <SectionHeader title="Compte" />
+          <GlassSurface variant="card" padding="none">
+            <AccountRow icon="mail-outline" label="Adresse e-mail" value={user.email} />
+            <AccountRow
+              icon="cash-outline"
+              label="Devise active"
+              value={user.currency}
+              last
+            />
+          </GlassSurface>
+        </Appear>
+
+        <Appear delay={240} style={styles.section}>
+          <Button
+            title="Se déconnecter"
+            onPress={handleLogout}
+            variant="danger"
+            fullWidth
+            icon="log-out-outline"
+          />
+        </Appear>
+
+        <AppText variant="captionSmall" tone="muted" center style={styles.footer}>
+          POKETRAKO · Gestion de finances personnelles
+        </AppText>
+      </>
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    marginBottom: spacing.lg,
-  },
-  profileCard: {
-    padding: spacing.xl,
-    alignItems: 'center' as const,
-    marginBottom: spacing.md,
-  },
-  avatar: {
-    marginBottom: spacing.md,
-  },
-  name: {
-    marginBottom: spacing.xs,
-  },
-  email: {
-    marginBottom: 0,
-  },
-  settingsCard: {
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    marginBottom: spacing.lg,
-  },
-  settingRow: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  settingInfo: {
-    flex: 1,
-  },
-  formInput: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.md,
-  },
-  currencySelector: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  currencyOption: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-  },
-  currencyOptionActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  dangerCard: {
-    padding: spacing.sm,
-  },
-});
+const AccountRow: React.FC<{
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  value: string;
+  last?: boolean;
+}> = ({ icon, label, value, last = false }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
+  return (
+    <View style={[styles.accountRow, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.colors.border }]}>
+      <View style={styles.accountIcon}>
+        <Ionicons name={icon} size={18} color={theme.colors.textSecondary} />
+      </View>
+      <AppText variant="bodySmall" tone="secondary" style={styles.accountLabel}>
+        {label}
+      </AppText>
+      <AppText variant="bodySmall" numberOfLines={1} style={styles.accountValue}>
+        {value}
+      </AppText>
+    </View>
+  );
+};
+
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    list: {
+      flex: 1,
+    },
+    identityCard: {
+      alignItems: 'center',
+      borderRadius: radius.xxl,
+    },
+    avatarWrapper: {
+      borderRadius: radius.full,
+      marginBottom: spacing.md,
+      ...theme.shadows.accent,
+    },
+    avatar: {
+      width: 76,
+      height: 76,
+      borderRadius: radius.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    name: {
+      marginBottom: spacing.xxs,
+    },
+    identityChips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: spacing.sm - 2,
+      marginTop: spacing.md,
+    },
+    section: {
+      marginTop: spacing.lg,
+    },
+    card: {
+      borderRadius: radius.xl,
+    },
+    fieldHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.sm + 2,
+    },
+    fieldTitles: {
+      flex: 1,
+      minWidth: 0,
+    },
+    themeControl: {
+      marginTop: spacing.xxs,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.border,
+      marginVertical: spacing.lg,
+    },
+    currencyRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    budgetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    budgetForm: {
+      marginTop: spacing.md,
+      gap: spacing.sm + 4,
+    },
+    accountRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md - 2,
+      paddingHorizontal: spacing.md,
+    },
+    accountIcon: {
+      width: 24,
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+    },
+    accountLabel: {
+      flex: 1,
+      marginLeft: spacing.sm,
+    },
+    accountValue: {
+      maxWidth: '52%',
+    },
+    footer: {
+      marginTop: spacing.xl,
+    },
+  });

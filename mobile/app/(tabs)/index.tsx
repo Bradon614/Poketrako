@@ -1,39 +1,57 @@
-import React, { useState, useCallback } from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { useMonthlySummary, useAlerts } from '@/hooks/useSummary';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useIncomes } from '@/hooks/useIncomes';
 import {
-  Screen,
-  Card,
-  Button,
-  Heading,
+  Appear,
   AppText,
-  LoadingState,
+  Card,
   EmptyState,
+  GlassSurface,
+  IconButton,
+  ListRow,
+  LoadingState,
+  PressableScale,
+  ProgressBar,
   RefreshableList,
-  colors,
-  spacing,
-  borderRadius,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
+  StatTile,
 } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
-import { formatMoney, getRelativeTime } from '@/utils';
+import { formatMoney, getRelativeTime, getCategoryVisual } from '@/utils';
 import { Expense, Income } from '@/types/api';
 import { confirmDialog } from '@/utils/notify';
+import { radius, spacing, type Theme } from '@/theme';
+import { useTheme, useThemedStyles } from '@/theme';
 
 type Transaction = { kind: 'expense'; data: Expense } | { kind: 'income'; data: Income };
 
 const DASHBOARD_LIST_SIZE = 5;
 
+/** Secondary text colour used on top of the accent hero gradient. */
+const ON_ACCENT_MUTED = 'rgba(255,255,255,0.85)';
+
 export default function DashboardScreen() {
+  const { theme, toggleScheme } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { user, logout } = useAuth();
   const currency = user?.currency || 'MGA';
   const { summary, loading: summaryLoading, refetch: refetchSummary } = useMonthlySummary();
   const { alert } = useAlerts();
-  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses({ _limit: DASHBOARD_LIST_SIZE, _sort: 'date:desc' });
-  const { incomes, loading: incomesLoading, refetch: refetchIncomes } = useIncomes({ _limit: DASHBOARD_LIST_SIZE, _sort: 'date:desc' });
+  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses({
+    _limit: DASHBOARD_LIST_SIZE,
+    _sort: 'date:desc',
+  });
+  const { incomes, loading: incomesLoading, refetch: refetchIncomes } = useIncomes({
+    _limit: DASHBOARD_LIST_SIZE,
+    _sort: 'date:desc',
+  });
   const [refreshing, setRefreshing] = useState(false);
 
   // Refresh when the dashboard regains focus (e.g. after creating an expense
@@ -64,8 +82,6 @@ export default function DashboardScreen() {
     await logout();
   };
 
-  const handleViewAllExpenses = () => router.push('/(tabs)/expenses');
-
   const recentTransactions: Transaction[] = [
     ...expenses.map((e): Transaction => ({ kind: 'expense', data: e })),
     ...incomes.map((i): Transaction => ({ kind: 'income', data: i })),
@@ -87,195 +103,278 @@ export default function DashboardScreen() {
     );
   }
 
+  const budgetRatio = summary && summary.budget > 0 ? summary.expenses / summary.budget : 0;
+  const remaining = summary ? Math.max(summary.budget - summary.expenses, 0) : 0;
+
   return (
     <Screen>
       <RefreshableList
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        contentContainerStyle={styles.content}
+        style={styles.list}
+        tabBarSpace
       >
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <Heading level={2}>Bonjour, {user?.fullName || user?.email?.split('@')[0] || 'Utilisateur'}</Heading>
-            <AppText variant="caption" color={colors.textMuted}>
-              {summary?.month ? `Mois de ${summary.month}` : 'Aperçu mensuel'}
-            </AppText>
-          </View>
-          <Button
-            title="Déconnexion"
-            onPress={handleLogout}
-            variant="ghost"
-            size="sm"
-            style={styles.logoutButton}
-          />
-        </View>
+        <ScreenHeader
+          eyebrow={summary?.month ? `Mois de ${formatMonthLabel(summary.month)}` : 'Aperçu mensuel'}
+          title={`Bonjour, ${
+            user?.fullName?.split(' ')[0] || user?.email?.split('@')[0] || 'Utilisateur'
+          }`}
+          actions={
+            <>
+              <IconButton
+                name={theme.isDark ? 'sunny-outline' : 'moon-outline'}
+                onPress={toggleScheme}
+                size="md"
+                variant="glass"
+                accessibilityLabel={theme.isDark ? 'Passer en thème clair' : 'Passer en thème sombre'}
+              />
+              <IconButton
+                name="log-out-outline"
+                onPress={handleLogout}
+                size="md"
+                variant="glass"
+                accessibilityLabel="Déconnexion"
+              />
+            </>
+          }
+        />
 
         {alert && (
-          <Card style={styles.alertCard}>
-            <View style={styles.alertRow}>
-              <Ionicons
-                name={alert.alert ? 'alert-circle' : 'checkmark-circle'}
-                size={20}
-                color={alert.alert ? colors.warning : colors.success}
-              />
-              <AppText variant="bodySmall" color={colors.text} style={styles.alertText}>
-                {alert.message}
-              </AppText>
-            </View>
-          </Card>
+          <Appear delay={20}>
+            <GlassSurface variant="subtle" elevation="none" padding="none" style={styles.alertCard}>
+              <View style={styles.alertRow}>
+                <View
+                  style={[
+                    styles.alertIcon,
+                    alert.alert ? styles.alertIconWarning : styles.alertIconOk,
+                  ]}
+                >
+                  <Ionicons
+                    name={alert.alert ? 'alert-circle' : 'checkmark-circle'}
+                    size={18}
+                    color={alert.alert ? theme.colors.warning : theme.colors.income}
+                  />
+                </View>
+                <AppText variant="bodySmall" style={styles.alertText}>
+                  {alert.message}
+                </AppText>
+              </View>
+            </GlassSurface>
+          </Appear>
         )}
 
         {summary && (
-          <View style={styles.balanceSection}>
-            <View style={styles.balanceCard}>
-              <AppText variant="caption" color={colors.textSecondary}>Solde actuel</AppText>
-              <Heading level={1} style={styles.balanceAmount}>
-                {formatMoney(summary.balance, currency)}
-              </Heading>
-              <View style={styles.balanceDetails}>
-                <View style={styles.balanceItem}>
-                  <AppText variant="caption" color={colors.success}>Revenus</AppText>
-                  <AppText variant="body" color={colors.text}>
-                    {formatMoney(summary.income, currency)}
-                  </AppText>
-                </View>
-                <View style={styles.balanceDivider} />
-                <View style={styles.balanceItem}>
-                  <AppText variant="caption" color={colors.error}>Dépenses</AppText>
-                  <AppText variant="body" color={colors.text}>
-                    {formatMoney(summary.expenses, currency)}
-                  </AppText>
-                </View>
-              </View>
-              {summary.budget > 0 && (
-                <View style={styles.budgetProgress}>
-                  <View style={styles.budgetLabels}>
-                    <AppText variant="caption" color={colors.textSecondary}>
-                      Budget: {formatMoney(summary.budget, currency)}
-                    </AppText>
-                    <AppText variant="caption" color={colors.textSecondary}>
-                      {Math.min(Math.round((summary.expenses / summary.budget) * 100), 100)}%
-                    </AppText>
-                  </View>
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        {
-                          width: `${Math.min((summary.expenses / summary.budget) * 100, 100)}%`,
-                          backgroundColor: summary.expenses > summary.budget ? colors.error : colors.primary,
-                        },
-                      ]}
-                    />
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
+          <Appear delay={60}>
+            <BalanceHero
+              currency={currency}
+              balance={summary.balance}
+              budget={summary.budget}
+              expenses={summary.expenses}
+              remaining={remaining}
+              budgetRatio={budgetRatio}
+            />
+          </Appear>
         )}
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Heading level={3}>Dernières transactions</Heading>
-            <Button title="Tout voir" onPress={handleViewAllExpenses} variant="ghost" size="sm" />
-          </View>
+        {summary && (
+          <Appear delay={120} style={styles.statsRow}>
+            <StatTile
+              label="Revenus"
+              value={formatMoney(summary.income, currency)}
+              icon="arrow-down-circle-outline"
+              tone="income"
+              hint="Ce mois-ci"
+            />
+            <StatTile
+              label="Dépenses"
+              value={formatMoney(summary.expenses, currency)}
+              icon="arrow-up-circle-outline"
+              tone="expense"
+              hint="Ce mois-ci"
+            />
+          </Appear>
+        )}
+
+        <Appear delay={180} style={styles.section}>
+          <SectionHeader title="Actions rapides" />
+          <Card padding="sm">
+            <View style={styles.quickActions}>
+              <QuickAction
+                icon="add-circle"
+                label="Dépense"
+                color={theme.colors.expense}
+                onPress={() => router.push('/expense/create')}
+              />
+              <View style={styles.quickActionDivider} />
+              <QuickAction
+                icon="cash"
+                label="Revenu"
+                color={theme.colors.income}
+                onPress={() => router.push('/income/create')}
+              />
+              <View style={styles.quickActionDivider} />
+              <QuickAction
+                icon="pricetags"
+                label="Catégories"
+                color={theme.colors.accent}
+                onPress={() => router.push('/(tabs)/categories')}
+              />
+            </View>
+          </Card>
+        </Appear>
+
+        <Appear delay={240} style={styles.section}>
+          <SectionHeader
+            title="Dernières transactions"
+            actionLabel="Tout voir"
+            onActionPress={() => router.push('/(tabs)/expenses')}
+          />
 
           {recentTransactions.length === 0 ? (
-            <EmptyState
-              title="Aucune transaction"
-              message="Commencez par ajouter une dépense ou un revenu"
-              icon={<Ionicons name="receipt-outline" size={48} color={colors.textMuted} />}
-            />
+            <Card>
+              <EmptyState
+                title="Aucune transaction"
+                message="Commencez par ajouter une dépense ou un revenu pour voir votre activité ici."
+                iconName="receipt-outline"
+              />
+            </Card>
           ) : (
-            <View style={styles.transactionList}>
-              {recentTransactions.map((tx) => (
-                <TransactionItem
+            <Card padding="none">
+              {recentTransactions.map((tx, index) => (
+                <TransactionRow
                   key={`${tx.kind}-${tx.data.id}`}
                   transaction={tx}
                   currency={currency}
+                  last={index === recentTransactions.length - 1}
                 />
               ))}
-            </View>
+            </Card>
           )}
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Heading level={3}>Actions rapides</Heading>
-          </View>
-          <View style={styles.quickActions}>
-            <QuickAction
-              icon="add-circle"
-              label="Dépense"
-              color={colors.error}
-              onPress={() => router.push('/expense/create')}
-            />
-            <QuickAction
-              icon="cash"
-              label="Revenu"
-              color={colors.success}
-              onPress={() => router.push('/income/create')}
-            />
-            <QuickAction
-              icon="pricetags"
-              label="Catégories"
-              color={colors.primary}
-              onPress={() => router.push('/(tabs)/categories')}
-            />
-          </View>
-        </View>
+        </Appear>
       </RefreshableList>
     </Screen>
   );
 }
 
-const TransactionItem: React.FC<{
+/** "2026-11" -> "Novembre 2026" */
+function formatMonthLabel(month: string): string {
+  const [year, monthIndex] = month.split('-');
+  const date = new Date(Number(year), Number(monthIndex) - 1, 1);
+  const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/**
+ * BalanceHero — the accent gradient card that showcases the available balance.
+ * White-on-accent typography with translucent wells keeps the numerals the
+ * loudest element on the screen while staying WCAG-AA legible in both themes.
+ */
+const BalanceHero: React.FC<{
+  currency: string;
+  balance: number;
+  budget: number;
+  expenses: number;
+  remaining: number;
+  budgetRatio: number;
+}> = ({ currency, balance, budget, expenses, remaining, budgetRatio }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const overBudget = budget > 0 && expenses > budget;
+  const percent = budget > 0 ? Math.min(Math.round(budgetRatio * 100), 100) : 0;
+
+  return (
+    <View style={[styles.heroShadow, theme.shadows.accent]}>
+      <LinearGradient
+        colors={theme.colors.accentGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.85, y: 1 }}
+        style={styles.hero}
+      >
+        {/* Specular sheen: the "liquid" read of the glass. */}
+        <LinearGradient
+          colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0)']}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={styles.heroSheen}
+        />
+        <View style={styles.heroHairline} />
+
+        <AppText variant="label" color="rgba(255,255,255,0.82)" uppercase>
+          Solde disponible
+        </AppText>
+        <AppText
+          variant="amountLarge"
+          color={theme.colors.textOnAccent}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+          style={styles.heroAmount}
+        >
+          {formatMoney(balance, currency)}
+        </AppText>
+
+        {budget > 0 ? (
+          <View style={styles.heroBudget}>
+            <View style={styles.heroBudgetLabels}>
+              <AppText variant="caption" color={ON_ACCENT_MUTED}>
+                Budget utilisé · {percent}%
+              </AppText>
+              <AppText variant="caption" color={ON_ACCENT_MUTED}>
+                {overBudget
+                  ? `Dépassé de ${formatMoney(expenses - budget, currency)}`
+                  : `${formatMoney(remaining, currency)} restants`}
+              </AppText>
+            </View>
+            <ProgressBar
+              value={budgetRatio}
+              height={8}
+              colorOverride={['#FFFFFF', '#DCE7FF']}
+              trackColor="rgba(255,255,255,0.24)"
+            />
+          </View>
+        ) : (
+          <View style={styles.heroHintRow}>
+            <Ionicons name="information-circle-outline" size={15} color="rgba(255,255,255,0.8)" />
+            <AppText variant="captionSmall" color="rgba(255,255,255,0.8)" style={styles.heroHint}>
+              Définissez un budget mensuel dans votre profil pour suivre votre progression.
+            </AppText>
+          </View>
+        )}
+      </LinearGradient>
+    </View>
+  );
+};
+
+const TransactionRow: React.FC<{
   transaction: Transaction;
   currency: string;
-}> = ({ transaction, currency }) => {
+  last: boolean;
+}> = ({ transaction, currency, last }) => {
+  const { theme } = useTheme();
   const isExpense = transaction.kind === 'expense';
   const data = transaction.data;
   const amount = parseFloat(data.amount);
   const date = 'date' in data && data.date ? data.date : data.creationDate;
-  const categoryName =
-    transaction.kind === 'expense'
-      ? transaction.data.category?.name || transaction.data.description || 'Sans catégorie'
-      : transaction.data.source;
 
-  const openDetail = () =>
-    router.push(isExpense ? `/expense/${data.id}` : `/income/${data.id}`);
+  const title = isExpense
+    ? (data as Expense).category?.name || (data as Expense).description || 'Sans catégorie'
+    : (data as Income).source;
+
+  const icon = isExpense ? getCategoryVisual(title).icon : 'cash-outline';
+  const iconColor = isExpense ? getCategoryVisual(title).color : theme.colors.income;
 
   return (
-    <TouchableOpacity style={styles.transactionItem} onPress={openDetail} activeOpacity={0.7}>
-      <View
-        style={[
-          styles.transactionIcon,
-          { backgroundColor: isExpense ? colors.error + '15' : colors.success + '15' },
-        ]}
-      >
-        <Ionicons
-          name={isExpense ? 'remove-circle' : 'add-circle'}
-          size={20}
-          color={isExpense ? colors.error : colors.success}
-        />
-      </View>
-      <View style={styles.transactionInfo}>
-        <AppText variant="body" color={colors.text} style={styles.transactionTitle}>
-          {categoryName}
-        </AppText>
-        <AppText variant="caption" color={colors.textMuted} style={styles.transactionDate}>
-          {getRelativeTime(date)}
-        </AppText>
-      </View>
-      <AppText
-        variant="body"
-        color={isExpense ? colors.error : colors.success}
-        style={styles.transactionAmount}
-      >
-        {isExpense ? '-' : '+'}{formatMoney(amount, currency)}
-      </AppText>
-      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-    </TouchableOpacity>
+    <ListRow
+      icon={icon}
+      iconColor={iconColor}
+      title={title}
+      subtitle={getRelativeTime(date)}
+      value={`${isExpense ? '-' : '+'}${formatMoney(amount, currency)}`}
+      valueTone={isExpense ? 'expense' : 'income'}
+      showChevron
+      last={last}
+      onPress={() => router.push(isExpense ? `/expense/${data.id}` : `/income/${data.id}`)}
+    />
   );
 };
 
@@ -284,153 +383,136 @@ const QuickAction: React.FC<{
   label: string;
   color: string;
   onPress: () => void;
-}> = ({ icon, label, color, onPress }) => (
-  <TouchableOpacity style={styles.quickAction} onPress={onPress} activeOpacity={0.7}>
-    <View
-      style={[
-        styles.quickActionIcon,
-        { backgroundColor: color + '15' },
-      ]}
-    >
-      <Ionicons name={icon} size={24} color={color} />
-    </View>
-    <AppText variant="bodySmall" color={colors.text} center style={styles.quickActionLabel}>
-      {label}
-    </AppText>
-  </TouchableOpacity>
-);
+}> = ({ icon, label, color, onPress }) => {
+  const styles = useThemedStyles(createStyles);
 
-const styles = StyleSheet.create({
-  content: {
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.lg,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  logoutButton: {
-    marginLeft: spacing.sm,
-  },
-  alertCard: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.warning + '10',
-    borderColor: colors.warning + '50',
-  },
-  alertRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  alertText: {
-    flex: 1,
-  },
-  balanceSection: {
-    marginBottom: spacing.lg,
-  },
-  balanceCard: {
-    padding: spacing.lg,
-  },
-  balanceAmount: {
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  balanceDetails: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-  },
-  balanceItem: {
-    flex: 1,
-    alignItems: 'center' as const,
-  },
-  balanceDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: colors.border,
-    marginHorizontal: spacing.lg,
-  },
-  budgetProgress: {
-    marginTop: spacing.lg,
-  },
-  budgetLabels: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: colors.surfaceVariant,
-    borderRadius: borderRadius.full,
-    overflow: 'hidden' as const,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: borderRadius.full,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  transactionList: {
-    gap: spacing.sm,
-  },
-  transactionItem: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.md,
-  },
-  transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  transactionInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-  transactionTitle: {
-    marginBottom: 2,
-  },
-  transactionDate: {
-    marginBottom: 0,
-  },
-  transactionAmount: {
-    fontWeight: '600' as const,
-  },
-  quickActions: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  quickAction: {
-    flex: 1,
-    alignItems: 'center' as const,
-    gap: spacing.sm,
-  },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  quickActionLabel: {
-    marginTop: 0,
-  },
-});
+  return (
+    <PressableScale
+      onPress={onPress}
+      style={styles.quickAction}
+      contentStyle={styles.quickActionContent}
+      accessibilityLabel={label}
+    >
+      <View style={[styles.quickActionWell, { backgroundColor: `${color}1F` }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <AppText variant="caption" tone="secondary" center numberOfLines={1}>
+        {label}
+      </AppText>
+    </PressableScale>
+  );
+};
+
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    list: {
+      flex: 1,
+    },
+    alertCard: {
+      marginBottom: spacing.md,
+    },
+    alertRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md - 2,
+      gap: spacing.md - 4,
+    },
+    alertIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    alertIconWarning: {
+      backgroundColor: theme.colors.warningSoft,
+    },
+    alertIconOk: {
+      backgroundColor: theme.colors.incomeSoft,
+    },
+    alertText: {
+      flex: 1,
+    },
+    heroShadow: {
+      borderRadius: radius.xxl,
+      marginTop: spacing.xs,
+    },
+    hero: {
+      borderRadius: radius.xxl,
+      padding: spacing.lg,
+      overflow: 'hidden',
+    },
+    heroSheen: {
+      pointerEvents: 'none',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '70%',
+    },
+    heroHairline: {
+      pointerEvents: 'none',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: 'rgba(255,255,255,0.45)',
+    },
+    heroAmount: {
+      marginTop: spacing.sm - 2,
+      marginBottom: spacing.md,
+    },
+    heroBudget: {
+      gap: spacing.sm,
+    },
+    heroBudgetLabels: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    heroHintRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm - 2,
+      marginTop: spacing.xs,
+    },
+    heroHint: {
+      flex: 1,
+      color: 'rgba(255,255,255,0.8)',
+    },
+    statsRow: {
+      flexDirection: 'row',
+      gap: spacing.sm + 4,
+      marginTop: spacing.md,
+    },
+    section: {
+      marginTop: spacing.lg,
+    },
+    quickActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    quickAction: {
+      flex: 1,
+    },
+    quickActionContent: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm + 2,
+      gap: spacing.sm - 2,
+    },
+    quickActionWell: {
+      width: 46,
+      height: 46,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    quickActionDivider: {
+      width: StyleSheet.hairlineWidth,
+      alignSelf: 'stretch',
+      marginVertical: spacing.sm,
+      backgroundColor: theme.colors.border,
+    },
+  });

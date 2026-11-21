@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Card, Button, Input, SelectField, Heading, AppText, IconButton, colors, spacing, borderRadius } from '@/components/ui';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  Button,
+  Card,
+  Heading,
+  IconButton,
+  Input,
+  SegmentedControl,
+  SelectField,
+  AppText,
+  type SegmentedOption,
+} from '@/components/ui';
 import { toISODateString, isValidDateString } from '@/utils';
 import { Category, CreateExpenseRequest, ExpenseType } from '@/types/api';
+import { radius, spacing, useTheme } from '@/theme';
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -14,6 +25,11 @@ const DEFAULT_FORM: CreateExpenseRequest = {
   description: '',
   type: 'ONE_TIME',
 };
+
+const TYPE_OPTIONS: readonly SegmentedOption<ExpenseType>[] = [
+  { label: 'Ponctuelle', value: 'ONE_TIME', icon: 'flash-outline' },
+  { label: 'Récurrente', value: 'RECURRING', icon: 'repeat-outline' },
+];
 
 interface ExpenseFormProps {
   categories: Category[];
@@ -37,10 +53,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { theme } = useTheme();
   const [formData, setFormData] = useState<CreateExpenseRequest>(initial ?? DEFAULT_FORM);
-  const [amountText, setAmountText] = useState(
-    initial?.amount ? String(initial.amount) : ''
-  );
+  const [amountText, setAmountText] = useState(initial?.amount ? String(initial.amount) : '');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
   const initialKey = JSON.stringify(initial ?? null);
@@ -52,8 +67,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialKey]);
 
-  const updateField = <K extends keyof CreateExpenseRequest>(key: K, value: CreateExpenseRequest[K]) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+  const updateField = <K extends keyof CreateExpenseRequest>(
+    key: K,
+    value: CreateExpenseRequest[K]
+  ) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const validate = () => {
@@ -66,12 +84,23 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       next.date = 'Date attendue au format AAAA-MM-JJ';
     }
     if (formData.type === 'RECURRING') {
-      if (!formData.startDate || !ISO_DATE_PATTERN.test(formData.startDate) || !isValidDateString(formData.startDate)) {
+      if (
+        !formData.startDate ||
+        !ISO_DATE_PATTERN.test(formData.startDate) ||
+        !isValidDateString(formData.startDate)
+      ) {
         next.startDate = 'Date de début requise (AAAA-MM-JJ)';
       }
-      if (formData.endDate && (!ISO_DATE_PATTERN.test(formData.endDate) || !isValidDateString(formData.endDate))) {
+      if (
+        formData.endDate &&
+        (!ISO_DATE_PATTERN.test(formData.endDate) || !isValidDateString(formData.endDate))
+      ) {
         next.endDate = 'Date de fin invalide (AAAA-MM-JJ)';
-      } else if (formData.endDate && formData.startDate && formData.endDate <= formData.startDate) {
+      } else if (
+        formData.endDate &&
+        formData.startDate &&
+        formData.endDate <= formData.startDate
+      ) {
         next.endDate = 'La date de fin doit être postérieure à la date de début';
       }
     }
@@ -94,36 +123,40 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   ];
 
   return (
-    <Card style={styles.card}>
+    <Card padding="lg" style={styles.card}>
       <View style={styles.formHeader}>
         <Heading level={3}>{editing ? 'Modifier la dépense' : 'Nouvelle dépense'}</Heading>
         <IconButton
-          icon={<Ionicons name="close" size={24} color={colors.textSecondary} />}
+          name="close"
           onPress={onCancel}
           size="sm"
-          variant="ghost"
+          variant="glass"
           accessibilityLabel="Fermer"
         />
       </View>
 
+      {/* Amount is the primary field: larger, with the currency symbol shown. */}
       <Input
-        label="Montant *"
+        label="Montant"
         value={amountText}
         onChangeText={setAmountText}
-        placeholder="0.00"
+        placeholder="0"
         keyboardType="decimal-pad"
         error={errors.amount}
+        inputStyle={styles.amountInput}
+        leftIcon={<Ionicons name="cash-outline" size={18} color={theme.colors.textMuted} />}
         style={styles.input}
       />
 
       <Input
-        label="Date *"
+        label="Date"
         value={formData.date || ''}
         onChangeText={(v) => updateField('date', v)}
-        placeholder="AAAA-MM-JJ (ex : 2026-01-31)"
+        placeholder="AAAA-MM-JJ"
         error={errors.date}
+        helperText="Format AAAA-MM-JJ (ex : 2026-01-31)"
+        leftIcon={<Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />}
         style={styles.input}
-        helperText="Format AAAA-MM-JJ"
       />
 
       <SelectField
@@ -140,41 +173,34 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         value={formData.description || ''}
         onChangeText={(v) => updateField('description', v)}
         placeholder="Optionnel"
+        leftIcon={<Ionicons name="text-outline" size={18} color={theme.colors.textMuted} />}
         style={styles.input}
       />
 
-      <View style={styles.typeSelector}>
-        <AppText variant="bodySmall" color={colors.textSecondary} style={styles.typeLabel}>
-          Type
+      <View style={styles.typeBlock}>
+        <AppText variant="bodySmall" tone="secondary" style={styles.typeLabel}>
+          Type de dépense
         </AppText>
-        <View style={styles.typeButtons}>
-          {(['ONE_TIME', 'RECURRING'] as ExpenseType[]).map((type) => (
-            <TouchableOpacity
-              key={type}
-              onPress={() => updateField('type', type)}
-              style={[styles.typeButton, formData.type === type && styles.typeButtonActive]}
-            >
-              <AppText
-                variant="bodySmall"
-                color={formData.type === type ? colors.white : colors.textSecondary}
-              >
-                {type === 'ONE_TIME' ? 'Ponctuelle' : 'Récurrente'}
-              </AppText>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <SegmentedControl
+          options={TYPE_OPTIONS}
+          value={formData.type ?? 'ONE_TIME'}
+          onChange={(type) => updateField('type', type)}
+        />
       </View>
 
       {formData.type === 'RECURRING' && (
-        <>
+        <View style={styles.recurringBlock}>
+          <AppText variant="caption" tone="muted" style={styles.recurringHint}>
+            Une occurrence est créée chaque mois entre ces deux dates.
+          </AppText>
           <Input
-            label="Date de début *"
+            label="Date de début"
             value={formData.startDate || ''}
             onChangeText={(v) => updateField('startDate', v)}
             placeholder="AAAA-MM-JJ"
             error={errors.startDate}
+            leftIcon={<Ionicons name="play-outline" size={18} color={theme.colors.textMuted} />}
             style={styles.input}
-            helperText="Une occurrence sera créée chaque mois"
           />
           <Input
             label="Date de fin (optionnel)"
@@ -182,9 +208,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             onChangeText={(v) => updateField('endDate', v)}
             placeholder="AAAA-MM-JJ"
             error={errors.endDate}
+            leftIcon={<Ionicons name="stop-outline" size={18} color={theme.colors.textMuted} />}
             style={styles.input}
           />
-        </>
+        </View>
       )}
 
       <View style={styles.formActions}>
@@ -194,6 +221,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           onPress={handleSubmit}
           fullWidth
           loading={submitting}
+          icon={editing ? 'checkmark' : 'add'}
         />
       </View>
     </Card>
@@ -202,10 +230,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: spacing.lg,
+    borderRadius: radius.xxl,
   },
   formHeader: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.lg,
@@ -213,32 +241,25 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: spacing.md,
   },
-  typeSelector: {
+  amountInput: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  typeBlock: {
     marginBottom: spacing.md,
   },
   typeLabel: {
     marginBottom: spacing.sm,
   },
-  typeButtons: {
-    flexDirection: 'row' as const,
-    gap: spacing.sm,
+  recurringBlock: {
+    marginBottom: spacing.sm,
   },
-  typeButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center' as const,
-  },
-  typeButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  recurringHint: {
+    marginBottom: spacing.md,
   },
   formActions: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     gap: spacing.md,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
 });

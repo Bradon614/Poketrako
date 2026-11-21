@@ -1,7 +1,21 @@
-import React from 'react';
-import { View, Text, Modal, FlatList, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, typography } from './design';
+import { radius as radiusTokens, spacing, typography } from '@/theme/tokens';
+import { useTheme } from '@/theme/ThemeProvider';
+import { BACKDROP_BLUR_SUPPORTED } from '@/theme/platform';
+import { AppText } from './Text';
+import { PressableScale } from './PressableScale';
+
+/**
+ * SelectField — a bottom-sheet picker.
+ *
+ * Deliberately dependency-free (no platform picker module) so the same sheet
+ * behaves identically on iOS, Android and web. The sheet itself is a glass
+ * surface: grabber handle, blurred backdrop where supported, and rows with an
+ * accent checkmark on the current value.
+ */
 
 export interface SelectOption {
   label: string;
@@ -16,11 +30,9 @@ interface SelectFieldProps {
   placeholder?: string;
   error?: string;
   helperText?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
-// Bottom-sheet style picker: reliable cross-platform (no iOS/Android picker
-// dependency) and consistent with the app's design system.
 export const SelectField: React.FC<SelectFieldProps> = ({
   label,
   value,
@@ -31,66 +43,127 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   helperText,
   style,
 }) => {
-  const [visible, setVisible] = React.useState(false);
+  const { theme } = useTheme();
+  const { colors, shadows } = theme;
+  const [visible, setVisible] = useState(false);
   const selected = options.find((opt) => opt.value === value);
   const hasError = !!error;
 
   return (
-    <View style={[styles.container, style]}>
-      {label && <Text style={[styles.label, hasError && styles.labelError]}>{label}</Text>}
-      <TouchableOpacity
-        style={[styles.selector, hasError && styles.selectorError]}
-        onPress={() => setVisible(true)}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={label || placeholder}
-      >
-        <Text
-          style={[styles.selectorText, !selected && styles.placeholder]}
-          numberOfLines={1}
+    <View style={style}>
+      {label && (
+        <AppText
+          variant="bodySmall"
+          tone={hasError ? 'expense' : 'secondary'}
+          style={styles.label}
         >
+          {label}
+        </AppText>
+      )}
+
+      <PressableScale
+        onPress={() => setVisible(true)}
+        accessibilityLabel={label ?? placeholder}
+        accessibilityHint="Ouvre la liste des valeurs"
+        pressedOpacity={0.75}
+        contentStyle={[
+          styles.selector,
+          {
+            backgroundColor: colors.insetRaised,
+            borderColor: hasError ? colors.expense : colors.border,
+          },
+        ]}
+      >
+        <AppText variant="body" tone={selected ? 'default' : 'muted'} numberOfLines={1} style={styles.selectorText}>
           {selected ? selected.label : placeholder}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
-      </TouchableOpacity>
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
+        </AppText>
+        <Ionicons name="chevron-down" size={17} color={colors.textMuted} />
+      </PressableScale>
+
+      {error ? (
+        <AppText variant="caption" tone="expense" style={styles.helper}>
+          {error}
+        </AppText>
+      ) : helperText ? (
+        <AppText variant="caption" tone="muted" style={styles.helper}>
+          {helperText}
+        </AppText>
+      ) : null}
 
       <Modal visible={visible} transparent animationType="slide" onRequestClose={() => setVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setVisible(false)} />
-          <View style={styles.sheet}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>{label || placeholder}</Text>
-              <TouchableOpacity onPress={() => setVisible(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
+        <View style={styles.overlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setVisible(false)}>
+            {BACKDROP_BLUR_SUPPORTED ? (
+              <BlurView intensity={18} tint={theme.isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+            ) : (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]} />
+            )}
+          </Pressable>
+
+          <View style={[styles.sheetWrapper]}>
+            <View
+              style={[
+                styles.sheet,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                shadows.floating,
+              ]}
+            >
+              <View style={[styles.grabber, { backgroundColor: colors.border }]} />
+
+              <View style={styles.sheetHeader}>
+                <AppText variant="h4" numberOfLines={1} style={styles.sheetTitle}>
+                  {label ?? placeholder}
+                </AppText>
+                <PressableScale
+                  onPress={() => setVisible(false)}
+                  accessibilityLabel="Fermer"
+                  hitSlop={8}
+                >
+                  <View style={[styles.closeButton, { backgroundColor: colors.inset }]}>
+                    <Ionicons name="close" size={16} color={colors.textSecondary} />
+                  </View>
+                </PressableScale>
+              </View>
+
+              <FlatList
+                data={options}
+                keyExtractor={(item) => item.value}
+                style={styles.list}
+                contentContainerStyle={styles.listContent}
+                renderItem={({ item, index }) => {
+                  const isSelected = item.value === value;
+                  const isLast = index === options.length - 1;
+                  return (
+                    <PressableScale
+                      onPress={() => {
+                        onSelect(item.value);
+                        setVisible(false);
+                      }}
+                      pressedOpacity={0.6}
+                      accessibilityState={{ selected: isSelected }}
+                    >
+                      <View style={styles.option}>
+                        <AppText
+                          variant="body"
+                          tone={isSelected ? 'accent' : 'default'}
+                          numberOfLines={1}
+                          style={styles.optionText}
+                        >
+                          {item.label}
+                        </AppText>
+                        {isSelected && <Ionicons name="checkmark" size={19} color={colors.accent} />}
+                        {!isLast && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
+                      </View>
+                    </PressableScale>
+                  );
+                }}
+                ListEmptyComponent={
+                  <AppText variant="bodySmall" tone="muted" center style={styles.empty}>
+                    Aucune option disponible
+                  </AppText>
+                }
+              />
             </View>
-            <FlatList
-              data={options}
-              keyExtractor={(item) => item.value}
-              style={styles.list}
-              renderItem={({ item }) => {
-                const isSelected = item.value === value;
-                return (
-                  <TouchableOpacity
-                    style={[styles.option, isSelected && styles.optionSelected]}
-                    onPress={() => {
-                      onSelect(item.value);
-                      setVisible(false);
-                    }}
-                  >
-                    <Text style={[styles.optionText, isSelected && styles.optionTextSelected]} numberOfLines={1}>
-                      {item.label}
-                    </Text>
-                    {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-                  </TouchableOpacity>
-                );
-              }}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>Aucune option disponible</Text>
-              }
-            />
           </View>
         </View>
       </Modal>
@@ -99,111 +172,91 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-  },
   label: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  labelError: {
-    color: colors.error,
+    marginBottom: spacing.sm - 2,
   },
   selector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.white,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radiusTokens.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    minHeight: 44,
-  },
-  selectorError: {
-    borderColor: colors.error,
+    minHeight: 50,
   },
   selectorText: {
     flex: 1,
-    fontSize: 16,
-    color: colors.text,
     marginRight: spacing.sm,
   },
-  placeholder: {
-    color: colors.textMuted,
+  helper: {
+    marginTop: spacing.xs + 2,
   },
-  errorText: {
-    ...typography.caption,
-    color: colors.error,
-    marginTop: spacing.xs,
-  },
-  helperText: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  modalOverlay: {
+  overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: colors.overlay,
   },
-  modalBackdrop: {
-    flex: 1,
+  sheetWrapper: {
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   sheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    maxHeight: '70%',
-    paddingBottom: spacing.lg,
+    borderRadius: radiusTokens.xxl,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingTop: spacing.sm,
+    maxHeight: '72%',
+  },
+  grabber: {
+    width: 36,
+    height: 4,
+    borderRadius: radiusTokens.full,
+    alignSelf: 'center',
+    marginBottom: spacing.sm,
   },
   sheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingBottom: spacing.sm + 2,
   },
   sheetTitle: {
-    ...typography.h4,
-    color: colors.text,
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  closeButton: {
+    width: 28,
+    height: 28,
+    borderRadius: radiusTokens.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   list: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  listContent: {
+    paddingBottom: spacing.lg,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  optionSelected: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: borderRadius.md,
-    borderBottomWidth: 0,
+    paddingVertical: spacing.md - 2,
+    paddingHorizontal: spacing.md,
+    position: 'relative',
   },
   optionText: {
     flex: 1,
-    fontSize: 16,
-    color: colors.text,
     marginRight: spacing.sm,
-  },
-  optionTextSelected: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  emptyText: {
     ...typography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
+  },
+  separator: {
+    position: 'absolute',
+    left: spacing.md,
+    right: spacing.md,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+  },
+  empty: {
     paddingVertical: spacing.xl,
   },
 });

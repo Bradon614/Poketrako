@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Card, Button, Input, Heading, IconButton, colors, spacing } from '@/components/ui';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Button, Card, Heading, IconButton, Input } from '@/components/ui';
 import { toISODateString, isValidDateString } from '@/utils';
 import { CreateIncomeRequest } from '@/types/api';
+import { radius, spacing, useTheme } from '@/theme';
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -34,10 +35,9 @@ export const IncomeForm: React.FC<IncomeFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { theme } = useTheme();
   const [formData, setFormData] = useState<CreateIncomeRequest>(initial ?? DEFAULT_FORM);
-  const [amountText, setAmountText] = useState(
-    initial?.amount ? String(initial.amount) : ''
-  );
+  const [amountText, setAmountText] = useState(initial?.amount ? String(initial.amount) : '');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
   const initialKey = JSON.stringify(initial ?? null);
@@ -49,8 +49,11 @@ export const IncomeForm: React.FC<IncomeFormProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialKey]);
 
-  const updateField = <K extends keyof CreateIncomeRequest>(key: K, value: CreateIncomeRequest[K]) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+  const updateField = <K extends keyof CreateIncomeRequest>(
+    key: K,
+    value: CreateIncomeRequest[K]
+  ) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const validate = () => {
@@ -80,44 +83,48 @@ export const IncomeForm: React.FC<IncomeFormProps> = ({
   };
 
   return (
-    <Card style={styles.card}>
+    <Card padding="lg" style={styles.card}>
       <View style={styles.formHeader}>
         <Heading level={3}>{editing ? 'Modifier le revenu' : 'Nouveau revenu'}</Heading>
         <IconButton
-          icon={<Ionicons name="close" size={24} color={colors.textSecondary} />}
+          name="close"
           onPress={onCancel}
           size="sm"
-          variant="ghost"
+          variant="glass"
           accessibilityLabel="Fermer"
         />
       </View>
 
       <Input
-        label="Montant *"
+        label="Montant"
         value={amountText}
         onChangeText={setAmountText}
-        placeholder="0.00"
+        placeholder="0"
         keyboardType="decimal-pad"
         error={errors.amount}
+        inputStyle={styles.amountInput}
+        leftIcon={<Ionicons name="cash-outline" size={18} color={theme.colors.textMuted} />}
         style={styles.input}
       />
 
       <Input
-        label="Date *"
+        label="Date"
         value={formData.date || ''}
         onChangeText={(v) => updateField('date', v)}
-        placeholder="AAAA-MM-JJ (ex : 2026-01-31)"
+        placeholder="AAAA-MM-JJ"
         error={errors.date}
+        helperText="Format AAAA-MM-JJ (ex : 2026-01-31)"
+        leftIcon={<Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />}
         style={styles.input}
-        helperText="Format AAAA-MM-JJ"
       />
 
       <Input
-        label="Source *"
+        label="Source"
         value={formData.source}
         onChangeText={(v) => updateField('source', v)}
-        placeholder="Ex: Salaire, Freelance, Vente..."
+        placeholder="Ex : Salaire, Freelance, Vente…"
         error={errors.source}
+        leftIcon={<Ionicons name="briefcase-outline" size={18} color={theme.colors.textMuted} />}
         style={styles.input}
       />
 
@@ -126,6 +133,7 @@ export const IncomeForm: React.FC<IncomeFormProps> = ({
         value={formData.description || ''}
         onChangeText={(v) => updateField('description', v)}
         placeholder="Optionnel"
+        leftIcon={<Ionicons name="text-outline" size={18} color={theme.colors.textMuted} />}
         style={styles.input}
       />
 
@@ -136,6 +144,7 @@ export const IncomeForm: React.FC<IncomeFormProps> = ({
           onPress={handleSubmit}
           fullWidth
           loading={submitting}
+          icon={editing ? 'checkmark' : 'add'}
         />
       </View>
     </Card>
@@ -144,10 +153,10 @@ export const IncomeForm: React.FC<IncomeFormProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: spacing.lg,
+    borderRadius: radius.xxl,
   },
   formHeader: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.lg,
@@ -155,9 +164,13 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: spacing.md,
   },
+  amountInput: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
   formActions: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     gap: spacing.md,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
 });

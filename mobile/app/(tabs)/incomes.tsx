@@ -1,32 +1,34 @@
-import React, { useState, useCallback } from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useIncomes } from '@/hooks/useIncomes';
 import { useAuth } from '@/hooks/useAuth';
 import { Income, CreateIncomeRequest, UpdateIncomeRequest } from '@/types/api';
 import { IncomeForm } from '@/components/forms/IncomeForm';
+import { TransactionCard } from '@/components/transactions/TransactionCard';
 import {
-  Screen,
+  Appear,
   Button,
-  IconButton,
-  Heading,
-  AppText,
   EmptyState,
   ErrorState,
   LoadingState,
   RefreshableList,
-  colors,
-  spacing,
-  borderRadius,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
 } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
 import { formatMoney, formatDate, toISODateString } from '@/utils';
 import { confirmDialog, showError } from '@/utils/notify';
+import { radius, spacing } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function IncomesScreen() {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const currency = user?.currency || 'MGA';
-  const { incomes, loading, error, refetch, create, updateIncome, deleteIncome } = useIncomes({ _sort: 'date:desc' });
+  const { incomes, loading, error, refetch, create, updateIncome, deleteIncome } = useIncomes({
+    _sort: 'date:desc',
+  });
   const [showForm, setShowForm] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -94,6 +96,8 @@ export default function IncomesScreen() {
       }
     : undefined;
 
+  const total = incomes.reduce((sum, income) => sum + parseFloat(income.amount || '0'), 0);
+
   if (loading && incomes.length === 0) {
     return (
       <Screen>
@@ -104,19 +108,30 @@ export default function IncomesScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Heading level={2}>Revenus</Heading>
-        <Button title="Ajouter" onPress={handleAddIncome} variant="primary" size="sm" />
-      </View>
+      <ScreenHeader
+        title="Revenus"
+        subtitle={
+          incomes.length > 0
+            ? `${incomes.length} entrée${incomes.length > 1 ? 's' : ''} · ${formatMoney(total, currency)}`
+            : "Enregistrez ce que vous encaissez"
+        }
+        actions={
+          showForm ? undefined : (
+            <Button title="Ajouter" onPress={handleAddIncome} variant="primary" size="sm" icon="add" pill />
+          )
+        }
+      />
 
       {showForm && (
-        <IncomeForm
-          initial={formInitial}
-          submitting={submitting}
-          editing={!!editingIncome}
-          onSubmit={handleSubmit}
-          onCancel={resetForm}
-        />
+        <Appear>
+          <IncomeForm
+            initial={formInitial}
+            submitting={submitting}
+            editing={!!editingIncome}
+            onSubmit={handleSubmit}
+            onCancel={resetForm}
+          />
+        </Appear>
       )}
 
       {error && incomes.length === 0 ? (
@@ -124,25 +139,43 @@ export default function IncomesScreen() {
       ) : incomes.length === 0 && !showForm ? (
         <EmptyState
           title="Aucun revenu"
-          message="Commencez par ajouter votre premier revenu"
-          icon={<Ionicons name="cash-outline" size={48} color={colors.textMuted} />}
+          message="Ajoutez votre premier revenu (salaire, vente, freelance…) pour équilibrer votre budget."
+          iconName="cash-outline"
           action={{ label: 'Ajouter un revenu', onPress: handleAddIncome }}
         />
       ) : (
         <RefreshableList
           refreshing={loading}
           onRefresh={refetch}
-          contentContainerStyle={styles.list}
+          style={styles.list}
+          tabBarSpace
+          contentContainerStyle={styles.listContent}
         >
-          {incomes.map((income) => (
-            <IncomeCard
-              key={income.id}
-              income={income}
-              currency={currency}
-              onPress={() => router.push(`/income/${income.id}`)}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+          {!showForm && (
+            <SectionHeader
+              title="Historique"
+              caption="Les plus récents en premier"
+              actionLabel="Ajouter"
+              onActionPress={handleAddIncome}
             />
+          )}
+
+          {incomes.map((income, index) => (
+            <Appear key={income.id} delay={Math.min(index, 6) * 30} offset={10}>
+              <TransactionCard
+                variant="income"
+                title={income.source}
+                amountLabel={formatMoney(parseFloat(income.amount), currency)}
+                dateLabel={formatDate(income.date)}
+                description={income.description}
+                icon="cash-outline"
+                iconColor={theme.colors.income}
+                onPress={() => router.push(`/income/${income.id}`)}
+                onEdit={() => handleEdit(income)}
+                onDelete={() => handleDelete(income)}
+                style={styles.card}
+              />
+            </Appear>
           ))}
         </RefreshableList>
       )}
@@ -150,125 +183,15 @@ export default function IncomesScreen() {
   );
 }
 
-const IncomeCard: React.FC<{
-  income: Income;
-  currency: string;
-  onPress: () => void;
-  onEdit: (income: Income) => void;
-  onDelete: (income: Income) => void;
-}> = ({ income, currency, onPress, onEdit, onDelete }) => {
-  const amount = parseFloat(income.amount);
-
-  return (
-    <View style={styles.card}>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        <View style={styles.incomeHeader}>
-          <View style={styles.incomeMain}>
-            <AppText variant="body" color={colors.text} style={styles.incomeTitle}>
-              {income.source}
-            </AppText>
-            <View style={styles.incomeMeta}>
-              <AppText variant="caption" color={colors.textMuted}>
-                {formatDate(income.date)}
-              </AppText>
-            </View>
-          </View>
-          <View style={styles.incomeActions}>
-            <AppText variant="h4" color={colors.success} style={styles.incomeAmount}>
-              +{formatMoney(amount, currency)}
-            </AppText>
-          </View>
-        </View>
-
-        {income.description && (
-          <AppText variant="caption" color={colors.textSecondary} style={styles.incomeDescription}>
-            {income.description}
-          </AppText>
-        )}
-      </TouchableOpacity>
-
-      <View style={styles.cardActions}>
-        <Button
-          title="Détails"
-          onPress={onPress}
-          variant="secondary"
-          size="sm"
-          style={styles.cardButton}
-        />
-        <IconButton
-          icon={<Ionicons name="create-outline" size={20} color={colors.textSecondary} />}
-          onPress={() => onEdit(income)}
-          size="sm"
-          variant="ghost"
-          accessibilityLabel="Modifier"
-        />
-        <IconButton
-          icon={<Ionicons name="trash-outline" size={20} color={colors.error} />}
-          onPress={() => onDelete(income)}
-          size="sm"
-          variant="ghost"
-          accessibilityLabel="Supprimer"
-        />
-      </View>
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
   list: {
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-  },
-  incomeHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  incomeMain: {
     flex: 1,
   },
-  incomeTitle: {
-    marginBottom: spacing.xs,
+  listContent: {
+    gap: spacing.md - 4,
+    paddingTop: spacing.xxs,
   },
-  incomeMeta: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    gap: spacing.sm,
+  card: {
+    borderRadius: radius.xl,
   },
-  incomeActions: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  incomeAmount: {
-    marginBottom: spacing.sm,
-  },
-  incomeDescription: {
-    marginTop: spacing.sm,
-    fontStyle: 'italic' as const,
-  },
-  cardActions: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  cardButton: {},
 });

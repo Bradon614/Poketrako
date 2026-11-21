@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { expenseService } from '@/services/expense.service';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
 import { ExpenseForm } from '@/components/forms/ExpenseForm';
 import { CreateExpenseRequest } from '@/types/api';
-import { Screen, Heading, LoadingState, IconButton, colors, spacing } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
+import { LoadingState, Screen, ScreenHeader } from '@/components/ui';
 import { showError } from '@/utils/notify';
+import { spacing } from '@/theme';
 
 // Create + edit screen. Edit mode is triggered by /expense/create?edit=true&id=123.
 export default function ExpenseCreateScreen() {
@@ -69,16 +69,11 @@ export default function ExpenseCreateScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
-        <View style={styles.header}>
-          <IconButton
-            icon={<Ionicons name="chevron-back" size={24} color={colors.text} />}
-            onPress={() => router.back()}
-            size="md"
-            variant="ghost"
-          />
-          <Heading level={2}>{isEdit ? 'Modifier la dépense' : 'Nouvelle dépense'}</Heading>
-          <View style={{ width: 44 }} />
-        </View>
+        <ScreenHeader
+          title={isEdit ? 'Modifier la dépense' : 'Nouvelle dépense'}
+          subtitle={isEdit ? undefined : 'Renseignez le montant, la date et la catégorie'}
+          onBack={() => router.back()}
+        />
 
         {loading ? (
           <LoadingState fullScreen message="Chargement de la dépense..." />
@@ -87,6 +82,7 @@ export default function ExpenseCreateScreen() {
             style={styles.flex}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
           >
             <ExpenseForm
@@ -107,12 +103,6 @@ export default function ExpenseCreateScreen() {
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   scrollContent: {
     paddingBottom: spacing.xxl,

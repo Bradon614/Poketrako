@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { incomeService } from '@/services/income.service';
 import { useIncomes } from '@/hooks/useIncomes';
 import { IncomeForm } from '@/components/forms/IncomeForm';
 import { CreateIncomeRequest } from '@/types/api';
-import { Screen, Heading, LoadingState, IconButton, colors, spacing } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
+import { LoadingState, Screen, ScreenHeader } from '@/components/ui';
 import { showError } from '@/utils/notify';
 import { toISODateString } from '@/utils';
+import { spacing } from '@/theme';
 
 // Create + edit screen. Edit mode is triggered by /income/create?edit=true&id=123.
 export default function IncomeCreateScreen() {
@@ -65,16 +65,11 @@ export default function IncomeCreateScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
-        <View style={styles.header}>
-          <IconButton
-            icon={<Ionicons name="chevron-back" size={24} color={colors.text} />}
-            onPress={() => router.back()}
-            size="md"
-            variant="ghost"
-          />
-          <Heading level={2}>{isEdit ? 'Modifier le revenu' : 'Nouveau revenu'}</Heading>
-          <View style={{ width: 44 }} />
-        </View>
+        <ScreenHeader
+          title={isEdit ? 'Modifier le revenu' : 'Nouveau revenu'}
+          subtitle={isEdit ? undefined : 'Indiquez le montant et la source du revenu'}
+          onBack={() => router.back()}
+        />
 
         {loading ? (
           <LoadingState fullScreen message="Chargement du revenu..." />
@@ -83,6 +78,7 @@ export default function IncomeCreateScreen() {
             style={styles.flex}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
           >
             <IncomeForm
@@ -102,12 +98,6 @@ export default function IncomeCreateScreen() {
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   scrollContent: {
     paddingBottom: spacing.xxl,

@@ -1,13 +1,18 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { colors } from '@/components/ui';
+import { useTheme } from '@/theme';
 
 export default function AuthLayout() {
+  const { theme } = useTheme();
+
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.background },
+        // Transparent scene so the ambient background of each screen shows
+        // through during the login <-> signup transition.
+        contentStyle: { backgroundColor: theme.colors.background },
+        animation: 'fade',
       }}
     >
       <Stack.Screen name="login" />

@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  Screen,
-  Card,
-  Input,
-  Button,
-  Heading,
   AppText,
+  Button,
+  Card,
+  Heading,
+  IconButton,
+  Input,
   LoadingState,
-  colors,
-  spacing,
+  Screen,
 } from '@/components/ui';
-import { Ionicons } from '@expo/vector-icons';
 import { showError } from '@/utils/notify';
+import { radius, spacing, useTheme } from '@/theme';
 
 export default function SignupScreen() {
+  const { theme, toggleScheme } = useTheme();
   const { signup } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,7 +70,7 @@ export default function SignupScreen() {
 
   if (loading) {
     return (
-      <Screen style={styles.centered}>
+      <Screen>
         <LoadingState message="Création du compte..." fullScreen />
       </Screen>
     );
@@ -78,146 +80,181 @@ export default function SignupScreen() {
     <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
+        style={styles.flex}
       >
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="wallet" size={48} color={colors.primary} />
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.topBar}>
+            <IconButton
+              name="chevron-back"
+              onPress={() => router.replace('/(auth)/login')}
+              size="md"
+              variant="glass"
+              accessibilityLabel="Retour à la connexion"
+            />
+            <IconButton
+              name={theme.isDark ? 'sunny-outline' : 'moon-outline'}
+              onPress={toggleScheme}
+              size="md"
+              variant="glass"
+              accessibilityLabel={theme.isDark ? 'Passer en thème clair' : 'Passer en thème sombre'}
+            />
           </View>
-          <Heading level={1} style={styles.title}>
-            POKETRAKO
-          </Heading>
-          <AppText variant="body" color={colors.textSecondary} center style={styles.subtitle}>
-            Créez votre compte
-          </AppText>
-        </View>
 
-        <Card style={styles.card}>
-          <Heading level={3} style={styles.formTitle}>
-            Inscription
-          </Heading>
+          <View style={styles.brand}>
+            <View style={[styles.logoGlow, theme.shadows.accent]}>
+              <LinearGradient
+                colors={theme.colors.accentGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.logo}
+              >
+                <Ionicons name="person-add" size={28} color={theme.colors.textOnAccent} />
+              </LinearGradient>
+            </View>
+            <Heading level={2} center style={styles.title}>
+              Créer un compte
+            </Heading>
+            <AppText variant="bodySmall" tone="secondary" center>
+              Quelques secondes suffisent pour commencer
+            </AppText>
+          </View>
 
-          <Input
-            label="Nom complet (optionnel)"
-            value={fullName}
-            onChangeText={setFullName}
-            placeholder="Jean Dupont"
-            autoCapitalize="words"
-            style={styles.input}
-          />
+          <Card padding="lg" style={styles.card}>
+            <Input
+              label="Nom complet (optionnel)"
+              value={fullName}
+              onChangeText={setFullName}
+              placeholder="Jean Dupont"
+              autoCapitalize="words"
+              leftIcon={<Ionicons name="person-outline" size={18} color={theme.colors.textMuted} />}
+              style={styles.input}
+            />
 
-          <Input
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="vous@exemple.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            error={emailError}
-            style={styles.input}
-          />
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="vous@exemple.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              error={emailError}
+              leftIcon={<Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />}
+              style={styles.input}
+            />
 
-          <Input
-            label="Mot de passe"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-            autoComplete="new-password"
-            error={passwordError}
-            helperText="Au moins 8 caractères"
-            style={styles.input}
-          />
+            <Input
+              label="Mot de passe"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry
+              autoComplete="new-password"
+              error={passwordError}
+              helperText="Au moins 8 caractères"
+              leftIcon={
+                <Ionicons name="lock-closed-outline" size={18} color={theme.colors.textMuted} />
+              }
+              style={styles.input}
+            />
 
-          <Input
-            label="Confirmer le mot de passe"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="••••••••"
-            secureTextEntry
-            autoComplete="new-password"
-            error={confirmError}
-            style={styles.input}
-          />
+            <Input
+              label="Confirmer le mot de passe"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="••••••••"
+              secureTextEntry
+              autoComplete="new-password"
+              error={confirmError}
+              leftIcon={
+                <Ionicons name="shield-checkmark-outline" size={18} color={theme.colors.textMuted} />
+              }
+              style={styles.input}
+              onSubmitEditing={handleSignup}
+              returnKeyType="go"
+            />
 
-          <Button
-            title="Créer mon compte"
-            onPress={handleSignup}
-            fullWidth
-            size="lg"
-            style={styles.submitButton}
-          />
-        </Card>
+            <Button
+              title="Créer mon compte"
+              onPress={handleSignup}
+              fullWidth
+              size="lg"
+              style={styles.submitButton}
+              icon="checkmark-circle-outline"
+            />
+          </Card>
 
-        <View style={styles.footer}>
-          <AppText variant="body" color={colors.textSecondary}>
-            Déjà un compte ?
-          </AppText>
-          <Button
-            title="Se connecter"
-            onPress={() => router.replace('/(auth)/login')}
-            variant="ghost"
-            size="md"
-          />
-        </View>
+          <View style={styles.footer}>
+            <AppText variant="bodySmall" tone="secondary">
+              Déjà un compte ?
+            </AppText>
+            <Button
+              title="Se connecter"
+              onPress={() => router.replace('/(auth)/login')}
+              variant="ghost"
+              size="sm"
+            />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
   },
-  centered: {
-    flex: 1,
+  scroll: {
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    paddingBottom: spacing.xl,
   },
-  header: {
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  brand: {
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoGlow: {
+    borderRadius: radius.xl,
     marginBottom: spacing.md,
   },
-  title: {
-    color: colors.text,
-    marginBottom: spacing.xs,
+  logo: {
+    width: 68,
+    height: 68,
+    borderRadius: radius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  subtitle: {
-    marginBottom: 0,
+  title: {
+    marginBottom: spacing.xs,
   },
   card: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 420,
     alignSelf: 'center',
-  },
-  formTitle: {
-    marginBottom: spacing.lg,
-    textAlign: 'center',
+    borderRadius: radius.xxl,
   },
   input: {
     marginBottom: spacing.md,
   },
   submitButton: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.sm - 4,
   },
 });
