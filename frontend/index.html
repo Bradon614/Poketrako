@@ -1,10 +1,40 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Poketrako</title>
+
+    <title>Poketrako — Gestion de vos finances personnelles</title>
+    <meta
+      name="description"
+      content="Poketrako réunit vos dépenses, vos revenus et votre budget dans une interface claire : suivi en temps réel, alertes de dépassement et répartition par catégorie."
+    />
+
+    <!-- Tells the browser which colour schemes the app supports, so form
+         controls and the address bar match the resolved theme. -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f5f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0c0f" media="(prefers-color-scheme: dark)" />
+
+    <script>
+      // Resolve the theme before the first paint: without this the page would
+      // flash the default light canvas before React applies the stored choice.
+      (function () {
+        try {
+          var stored = localStorage.getItem('poketrako.theme');
+          var mode =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', mode);
+        } catch (error) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

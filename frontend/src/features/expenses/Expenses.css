@@ -1,0 +1,39 @@
+/* ===========================================================================
+ * Expenses / Incomes pages
+ * ========================================================================= */
+
+/* Toolbar select sizing (the shared .tx-toolbar grid lives in transactions.css) */
+.tx-toolbar__select {
+  min-width: 158px;
+}
+
+/* "Load more" footer of a list card. */
+.tx-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
+  border-top: 1px solid var(--c-hairline);
+  flex-wrap: wrap;
+}
+
+/* Filter chips summary shown above the list on phones. */
+.tx-active-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+  .tx-toolbar__select {
+    min-width: 140px;
+  }
+
+  /* The search field is the first row: let it shrink to the available width. */
+  .tx-toolbar__search {
+    min-width: 0;
+    width: 100%;
+  }
+}

@@ -1,0 +1,357 @@
+/* ===========================================================================
+ * Controls: segmented control, search, switch, badge, chip, tooltip, delta
+ * ========================================================================= */
+
+/* --- SegmentedControl ------------------------------------------------------ */
+
+.segmented {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(var(--segments), minmax(0, 1fr));
+  gap: 0;
+  padding: 3px;
+  background: var(--c-inset);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-pill);
+  max-width: 100%;
+}
+
+/* The thumb is a solid pill that slides under the active item. */
+.segmented__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--segments));
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  transform: translateX(calc(100% * var(--seg-index)));
+  transition: transform var(--dur-base) var(--ease-spring);
+  pointer-events: none;
+}
+
+.segmented__item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4);
+  height: 34px;
+  background: none;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--c-text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.segmented__item.is-selected {
+  color: var(--c-text);
+  font-weight: var(--weight-semibold);
+}
+
+.segmented__icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.segmented--sm .segmented__item {
+  height: 30px;
+  font-size: var(--text-xs);
+  padding: 0 var(--sp-3);
+}
+
+.segmented--sm .segmented__icon {
+  width: 13px;
+  height: 13px;
+}
+
+@media (max-width: 640px) {
+  .segmented__item span {
+    /* On phones the icons carry the meaning to save horizontal space. */
+    display: none;
+  }
+
+  .segmented--keep-labels .segmented__item span {
+    display: inline;
+  }
+
+  .segmented__item {
+    padding: 0 var(--sp-3);
+  }
+}
+
+/* --- Search ---------------------------------------------------------------- */
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 42px;
+  padding: 0 var(--sp-3) 0 var(--sp-4);
+  background: var(--c-inset);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.search:focus-within {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-ring);
+  background: var(--c-surface);
+}
+
+.search__icon {
+  width: 16px;
+  height: 16px;
+  color: var(--c-text-3);
+  flex-shrink: 0;
+}
+
+.search__input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: var(--text-base);
+  color: var(--c-text);
+}
+
+.search__input::placeholder {
+  color: var(--c-text-3);
+}
+
+/* Remove the native clear affordance — we render our own. */
+.search__input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--c-inset-strong);
+  color: var(--c-text-2);
+  cursor: pointer;
+}
+
+.search__clear:hover {
+  color: var(--c-text);
+}
+
+.search__clear svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* --- Switch ---------------------------------------------------------------- */
+
+.switch-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.switch-field__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.switch-field__label {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+}
+
+.switch-field__description {
+  font-size: var(--text-sm);
+  color: var(--c-text-3);
+}
+
+.switch {
+  position: relative;
+  width: 50px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  background: var(--c-inset-strong);
+  cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+}
+
+.switch.is-on {
+  background: var(--gradient-brand);
+  border-color: transparent;
+}
+
+.switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+
+.switch.is-on .switch__thumb {
+  transform: translateX(20px);
+}
+
+/* --- Badge / Chip ---------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px var(--sp-2);
+  border-radius: var(--r-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-wide);
+  white-space: nowrap;
+  background: var(--c-inset);
+  color: var(--c-text-2);
+}
+
+.badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.badge--accent {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+
+.badge--income {
+  background: var(--c-income-soft);
+  color: var(--c-income);
+}
+
+.badge--expense {
+  background: var(--c-expense-soft);
+  color: var(--c-expense);
+}
+
+.badge--warning {
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  background: var(--c-inset);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--c-text-2);
+  white-space: nowrap;
+}
+
+.chip svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chip--accent { color: var(--c-accent-text); background: var(--c-accent-soft); }
+.chip--income { color: var(--c-income); background: var(--c-income-soft); }
+.chip--expense { color: var(--c-expense); background: var(--c-expense-soft); }
+.chip--warning { color: var(--c-warning); background: var(--c-warning-soft); }
+
+.chip--interactive {
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.chip--interactive:hover {
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+
+.chip.is-selected {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  color: var(--c-on-accent);
+}
+
+/* --- Tooltip --------------------------------------------------------------- */
+
+.tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip__trigger {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltip__bubble {
+  position: absolute;
+  z-index: var(--z-tooltip);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 240px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-3);
+  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
+  color: var(--c-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-snug);
+  text-align: center;
+  pointer-events: none;
+  animation: fade-in var(--dur-fast) var(--ease-out) both;
+}
+
+.tooltip__bubble--top { bottom: calc(100% + 8px); }
+.tooltip__bubble--bottom { top: calc(100% + 8px); }
+
+/* --- Delta ----------------------------------------------------------------- */
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.delta--income { background: var(--c-income-soft); color: var(--c-income); }
+.delta--expense { background: var(--c-expense-soft); color: var(--c-expense); }
+.delta--neutral { background: var(--c-inset); color: var(--c-text-2); }

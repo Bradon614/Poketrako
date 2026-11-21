@@ -1,0 +1,403 @@
+/* ===========================================================================
+ * Dashboard
+ * ========================================================================= */
+
+/* --- Greeting ------------------------------------------------------------- */
+
+.dash-hello {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.dash-hello__title {
+  margin-top: var(--sp-1);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--track-tighter);
+}
+
+.dash-hello__text {
+  margin-top: var(--sp-1);
+  font-size: var(--text-base);
+  color: var(--c-text-2);
+}
+
+.dash-hello__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+/* --- Balance hero --------------------------------------------------------- */
+
+.hero {
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  animation: rise-in var(--dur-slow) var(--ease-out) both;
+}
+
+.hero__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  flex-wrap: wrap;
+}
+
+.hero__eyebrow {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+/* The balance is the loudest figure in the whole product: large, tabular,
+   tightened tracking. */
+.hero__amount {
+  margin-top: var(--sp-2);
+  font-size: clamp(2.1rem, 4.4vw, 3rem);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--track-tighter);
+}
+
+.hero__period {
+  margin-top: var(--sp-1);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.hero__flows {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.hero__flow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-2);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.hero__flow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.hero__flow-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hero__flow-label {
+  display: block;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.hero__flow-value {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-tight);
+}
+
+.hero__flow-delta {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+
+.hero__budget {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.hero__budget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.hero__budget-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.hero__budget-label svg {
+  width: 15px;
+  height: 15px;
+}
+
+.hero__budget-value {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: #fff;
+}
+
+/* The progress bar sits on the gradient: use white for both track and fill
+   so the ratio still reads at a glance. */
+.hero__progress .progress__track {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.hero__progress .progress__fill {
+  background: #fff;
+}
+
+.hero__budget-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.hero__budget-empty svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.hero__budget-link {
+  color: #fff;
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* --- KPI row -------------------------------------------------------------- */
+
+.dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
+.dash-kpi {
+  border-radius: var(--r-xl);
+  animation: rise-in var(--dur-base) var(--ease-out) both;
+}
+
+@media (max-width: 1180px) {
+  .dash-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .dash-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- Budget card ---------------------------------------------------------- */
+
+.dash-budget {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.dash-budget__facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  flex: 1;
+  min-width: 150px;
+}
+
+.dash-budget__facts div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.dash-budget__facts dt {
+  font-size: var(--text-sm);
+  color: var(--c-text-3);
+}
+
+.dash-budget__facts dd {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.dash-budget__facts dd.is-over {
+  color: var(--c-expense);
+}
+
+.dash-budget-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-6) var(--sp-4);
+  text-align: center;
+}
+
+/* --- Chart ---------------------------------------------------------------- */
+
+.chart {
+  position: relative;
+  height: 248px;
+}
+
+.chart__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: var(--text-sm);
+  color: var(--c-text-3);
+  text-align: center;
+  padding: 0 var(--sp-6);
+}
+
+/* --- Side column ---------------------------------------------------------- */
+
+.dash-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+.dash-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* --- Facts list ----------------------------------------------------------- */
+
+.dash-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.dash-facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  font-size: var(--text-sm);
+  color: var(--c-text-2);
+}
+
+.dash-facts li + li {
+  border-top: 1px solid var(--c-hairline);
+}
+
+.dash-facts li svg {
+  width: 16px;
+  height: 16px;
+  color: var(--c-text-3);
+  flex-shrink: 0;
+}
+
+.dash-facts li span {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-facts li strong {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--c-text);
+}
+
+/* --- Link used inside card headers ---------------------------------------- */
+
+.section-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--c-accent-text);
+  white-space: nowrap;
+}
+
+.section-card__link svg {
+  width: 15px;
+  height: 15px;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.section-card__link:hover svg {
+  transform: translateX(2px);
+}
+
+/* --- Phones --------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .hero {
+    padding: var(--sp-5);
+  }
+
+  .hero__top {
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
+
+  .hero__flows {
+    width: 100%;
+  }
+
+  .hero__flow {
+    flex: 1;
+    min-width: 0;
+    padding-right: var(--sp-3);
+  }
+
+  .hero__flow-delta {
+    display: none;
+  }
+
+  .hero__budget-head {
+    justify-content: flex-start;
+  }
+
+  .dash-hello__actions {
+    width: 100%;
+  }
+
+  .dash-hello__actions .btn {
+    flex: 1;
+  }
+
+  .chart {
+    height: 220px;
+  }
+}

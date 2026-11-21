@@ -1,0 +1,188 @@
+/* ===========================================================================
+ * Surface / SectionCard
+ * ========================================================================= */
+
+.section-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.section-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-5) var(--sp-3);
+}
+
+.section-card__titles {
+  min-width: 0;
+}
+
+.section-card__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-tight);
+  color: var(--c-text);
+}
+
+.section-card__subtitle {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--c-text-3);
+}
+
+.section-card__action {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.section-card__body {
+  padding: 0 var(--sp-5) var(--sp-5);
+  flex: 1;
+  min-width: 0;
+}
+
+/* When there is no header, the body keeps the full padding. */
+.section-card > .section-card__body:first-child {
+  padding-top: var(--sp-5);
+}
+
+/* --- Grouped rows ----------------------------------------------------------
+ * A list of rows inside one surface, separated by insets that stop at the
+ * text edge rather than full-bleed dividers.
+ * ------------------------------------------------------------------------ */
+
+.row-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  padding: var(--sp-4) var(--sp-5);
+  background: none;
+  border: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+button.row-item,
+a.row-item {
+  cursor: pointer;
+}
+
+button.row-item:hover,
+a.row-item:hover {
+  background: var(--c-inset);
+}
+
+.row-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: var(--sp-5);
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--c-hairline);
+}
+
+/* Rows that lead with an icon well indent the separator to align with text. */
+.row-item--with-icon:not(:last-child)::after {
+  left: calc(var(--sp-5) + 42px + var(--sp-4));
+}
+
+.row-item__well {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
+  flex-shrink: 0;
+  font-size: var(--text-md);
+}
+
+.row-item__well svg {
+  width: 19px;
+  height: 19px;
+}
+
+.row-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-item__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-item__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: 3px;
+  font-size: var(--text-sm);
+  color: var(--c-text-3);
+}
+
+.row-item__trail {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.row-item__value {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-tight);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.row-item__chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--c-text-3);
+  flex-shrink: 0;
+}
+
+/* On phones the value gets tighter and the well shrinks a touch. */
+@media (max-width: 767px) {
+  .row-item {
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+  }
+
+  .row-item__well {
+    width: 38px;
+    height: 38px;
+  }
+
+  .row-item--with-icon:not(:last-child)::after {
+    left: calc(var(--sp-4) + 38px + var(--sp-3));
+  }
+
+  .row-item__value {
+    font-size: var(--text-base);
+  }
+}
