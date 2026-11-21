@@ -1,0 +1,283 @@
+/* ===========================================================================
+ * Feedback: skeletons, spinner, empty/error states, alerts
+ * ========================================================================= */
+
+/* --- Skeleton -------------------------------------------------------------- */
+
+.skeleton {
+  display: block;
+  background: var(--skeleton-base);
+  border-radius: var(--r-sm);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--skeleton-shine) 50%,
+    transparent 100%
+  );
+  background-size: 60% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.5s var(--ease-in-out) infinite;
+}
+
+.skeleton-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.skeleton-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-rows__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.skeleton-rows__row + .skeleton-rows__row {
+  border-top: 1px solid var(--c-hairline);
+}
+
+.skeleton-rows__text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.skeleton-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+}
+
+/* --- Spinner --------------------------------------------------------------- */
+
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  color: var(--c-text-3);
+}
+
+.spinner svg {
+  animation: spin 0.9s linear infinite;
+}
+
+/* --- State (empty / error) ------------------------------------------------- */
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-10) var(--sp-6);
+  text-align: center;
+}
+
+.state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-xl);
+  background: var(--c-inset);
+  border: 1px solid var(--c-hairline);
+  color: var(--c-text-3);
+}
+
+.state__icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.state__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.state__message {
+  max-width: 42ch;
+  font-size: var(--text-sm);
+  color: var(--c-text-2);
+  line-height: var(--leading-normal);
+}
+
+.state__action {
+  margin-top: var(--sp-2);
+}
+
+.state--error .state__icon {
+  background: var(--c-expense-soft);
+  border-color: transparent;
+  color: var(--c-expense);
+}
+
+/* Compact variant for inline use (inside a card section). */
+.state--compact {
+  padding: var(--sp-6) var(--sp-4);
+}
+
+.state--compact .state__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-md);
+}
+
+.state--compact .state__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- Alert ----------------------------------------------------------------- */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+}
+
+.alert__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.alert__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert__title {
+  font-weight: var(--weight-semibold);
+  margin-bottom: 2px;
+}
+
+.alert__body {
+  color: inherit;
+  line-height: var(--leading-snug);
+}
+
+.alert__action {
+  flex-shrink: 0;
+}
+
+.alert--warning {
+  background: var(--c-warning-soft);
+  border-color: color-mix(in srgb, var(--c-warning) 26%, transparent);
+  color: var(--c-warning);
+}
+
+.alert--danger {
+  background: var(--c-expense-soft);
+  border-color: color-mix(in srgb, var(--c-expense) 26%, transparent);
+  color: var(--c-expense);
+}
+
+.alert--success {
+  background: var(--c-income-soft);
+  border-color: color-mix(in srgb, var(--c-income) 26%, transparent);
+  color: var(--c-income);
+}
+
+.alert--info {
+  background: var(--c-info-soft);
+  border-color: color-mix(in srgb, var(--c-info) 26%, transparent);
+  color: var(--c-info);
+}
+
+/* --- Toasts ---------------------------------------------------------------- */
+
+.toast-region {
+  position: fixed;
+  z-index: var(--z-toast);
+  bottom: var(--sp-5);
+  right: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 260px;
+  max-width: 380px;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  pointer-events: auto;
+  animation: rise-in var(--dur-base) var(--ease-out) both;
+}
+
+.toast__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.toast__message {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-snug);
+}
+
+.toast__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-text-3);
+  cursor: pointer;
+}
+
+.toast__close:hover {
+  background: var(--c-inset);
+  color: var(--c-text);
+}
+
+.toast__close svg {
+  width: 13px;
+  height: 13px;
+}
+
+.toast--success .toast__icon { color: var(--c-income); }
+.toast--error .toast__icon { color: var(--c-expense); }
+.toast--warning .toast__icon { color: var(--c-warning); }
+.toast--info .toast__icon { color: var(--c-accent); }
+
+@media (max-width: 640px) {
+  .toast-region {
+    left: var(--sp-4);
+    right: var(--sp-4);
+    bottom: calc(var(--sp-4) + var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+    align-items: stretch;
+  }
+
+  .toast {
+    min-width: 0;
+    max-width: none;
+  }
+}

@@ -1,0 +1,319 @@
+/* ===========================================================================
+ * Transaction rows (dashboard recent activity, expenses, incomes)
+ * ========================================================================= */
+
+.tx-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.tx-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-right: var(--sp-3);
+}
+
+.tx-row + .tx-row::before {
+  content: '';
+  position: absolute;
+  left: var(--sp-5);
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--c-hairline);
+}
+
+.tx-row__main {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  background: none;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.tx-row__main:hover {
+  background: var(--c-inset);
+}
+
+.tx-row__main:hover .tx-row__chevron {
+  transform: translateX(2px);
+  color: var(--c-text-2);
+}
+
+.tx-row__well {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+}
+
+.tx-row__well svg {
+  width: 19px;
+  height: 19px;
+}
+
+.tx-row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-row__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tx-row__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: 3px;
+  font-size: var(--text-sm);
+  color: var(--c-text-3);
+  min-width: 0;
+}
+
+.tx-row__description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+.tx-row__description::before {
+  content: '·';
+  margin-right: var(--sp-2);
+  font-style: normal;
+}
+
+.tx-row__amount {
+  flex-shrink: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-tight);
+  white-space: nowrap;
+}
+
+.tx-row__amount--income { color: var(--c-income); }
+.tx-row__amount--expense { color: var(--c-expense); }
+.tx-row__amount--neutral { color: var(--c-text); }
+
+.tx-row__chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--c-text-3);
+  transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.tx-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* The actions stay subtle until the row is hovered or focused. */
+@media (hover: hover) {
+  .tx-row__actions {
+    opacity: 0.35;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .tx-row:hover .tx-row__actions,
+  .tx-row:focus-within .tx-row__actions {
+    opacity: 1;
+  }
+}
+
+/* On phones the well shrinks and the amount stacks under the title so the
+   row never needs a horizontal scroll. */
+@media (max-width: 640px) {
+  .tx-row {
+    padding-right: var(--sp-2);
+  }
+
+  .tx-row__main {
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    align-items: flex-start;
+  }
+
+  .tx-row__well {
+    width: 38px;
+    height: 38px;
+  }
+
+  .tx-row__well svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .tx-row__title {
+    white-space: normal;
+  }
+
+  .tx-row__amount {
+    font-size: var(--text-base);
+  }
+
+  .tx-row__chevron {
+    display: none;
+  }
+}
+
+/* --- Receipt hint (inside the expense form) ------------------------------- */
+
+.receipt-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-inset);
+}
+
+.receipt-hint__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+
+.receipt-hint__icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.receipt-hint__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.receipt-hint__text strong {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.receipt-hint__text em {
+  display: block;
+  font-size: var(--text-xs);
+  font-style: normal;
+  color: var(--c-text-3);
+}
+
+.receipt-hint__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* --- Toolbar above the lists --------------------------------------------- */
+
+.tx-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-xl);
+}
+
+/* A nowrap row of controls has a large min-content width; without this the
+   flex container would grow past the viewport instead of scrolling. */
+.tx-toolbar > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tx-toolbar__search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.tx-toolbar__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.tx-toolbar__select {
+  min-width: 150px;
+}
+
+@media (max-width: 767px) {
+  .tx-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-2);
+  }
+
+  /* Wrap instead of scrolling: every filter stays visible on a phone
+     (a hidden horizontal strip would bury the category and type filters). */
+  .tx-toolbar__filters {
+    flex-wrap: wrap;
+    overflow: visible;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .tx-toolbar__filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tx-toolbar__select {
+    min-width: 0;
+    flex: 1 1 calc(50% - var(--sp-2));
+  }
+}
+
+/* --- List summary line ---------------------------------------------------- */
+
+.tx-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: 0 var(--sp-1);
+  font-size: var(--text-sm);
+  color: var(--c-text-2);
+}
+
+.tx-summary__total {
+  font-weight: var(--weight-semibold);
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}

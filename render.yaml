@@ -1,0 +1,25 @@
+# Render Blueprint — deploys the Backend/ Express API as a web service.
+# Usage: Render dashboard -> New -> Blueprint -> point at this repo.
+# Secrets (DATABASE_URL, JWT_SECRET) are intentionally left unset here
+# (sync: false) so they're entered once in the Render dashboard, never
+# committed to the repo.
+services:
+  - type: web
+    name: poketrako-api
+    runtime: node
+    rootDir: Backend
+    plan: free
+    buildCommand: npm install && npx prisma generate
+    startCommand: npx prisma migrate deploy && node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

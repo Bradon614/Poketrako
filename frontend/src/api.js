@@ -8,8 +8,24 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-async function request(path, { method = "GET", body, params } = {}) {
+// A 401 on an authenticated request means the session is gone (expired or
+// revoked token). The API layer only reports it — the app shell decides what
+// to do (clear the token, tell the user, go back to the login screen), so this
+// module stays free of routing concerns. Same pattern as the mobile app.
+let unauthorizedHandler = null;
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = handler;
+}
+
+function handleUnauthorized() {
+  localStorage.removeItem("token");
+  if (unauthorizedHandler) unauthorizedHandler();
+}
+
+async function request(path, { method = "GET", body, params, skipAuthRedirect = false } = {}) {
   const query = params ? `?${new URLSearchParams(params)}` : "";
+  const hadToken = Boolean(localStorage.getItem("token"));
 
   const res = await fetch(`${API_URL}${path}${query}`, {
     method,
@@ -21,6 +37,11 @@ async function request(path, { method = "GET", body, params } = {}) {
   const data = text ? JSON.parse(text) : null;
 
   if (!res.ok) {
+    // Only an authenticated request can "lose" a session — a bare 401 from
+    // login/signup is a credentials error and must surface its own message.
+    if (res.status === 401 && hadToken && !skipAuthRedirect) {
+      handleUnauthorized();
+    }
     throw new Error(data?.message || `Requête échouée (${res.status}) sur ${path}`);
   }
 
